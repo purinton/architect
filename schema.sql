@@ -5,5 +5,6 @@ CREATE TABLE `channels` (
   `guild_id` varchar(32) DEFAULT NULL,
   `channel_id` varchar(32) DEFAULT NULL,
   `response_id` varchar(64) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_app_guild_channel` (`app_id`,`guild_id`,`channel_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
