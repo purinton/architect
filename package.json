@@ -1,30 +1,27 @@
 {
-    "name": "@purinton/discord-template",
+    "name": "@purinton/architect",
     "type": "module",
     "version": "1.0.0",
     "description": "A modern Discord app built with Node.js, based on the purinton/discord foundation.",
-    "main": "discord-template.mjs",
+    "main": "architect.mjs",
     "scripts": {
-        "start": "node discord-template.mjs",
+        "start": "node architect.mjs",
         "test": "npx --node-options=\"--experimental-vm-modules --no-warnings\" jest --detectOpenHandles --silent"
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/purinton/discord-template.git"
+        "url": "git+https://github.com/purinton/architect.git"
     },
     "keywords": [
-        "discord-template",
-        "discord",
-        "discord-bot",
-        "discord-app",
+        "architect",
         "nodejs"
     ],
     "author": "Russell Purinton <russell@purinton.us>",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/purinton/discord-template/issues"
+        "url": "https://github.com/purinton/architect/issues"
     },
-    "homepage": "https://github.com/purinton/discord-template#readme",
+    "homepage": "https://github.com/purinton/architect#readme",
     "devDependencies": {
         "jest": "^30.0.2"
     },

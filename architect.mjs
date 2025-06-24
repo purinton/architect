@@ -10,7 +10,7 @@ registerSignals({ log });
 const packageJson = JSON.parse(fs.readFileSync(path(import.meta, 'package.json')), 'utf8');
 const version = packageJson.version;
 
-const presence = { activities: [{ name: `discord-template v${version}`, type: 4 }], status: 'online' };
+const presence = { activities: [{ name: `architect v${version}`, type: 4 }], status: 'online' };
 
 //const db = await createDb({ log });
 //registerSignals({ shutdownHook: () => db.end() });
