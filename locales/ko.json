@@ -1,5 +1,5 @@
 {
-    "help": "환영합니다 **Architect**! 🏗️\n\nArchitect는 AI 기반 자동화 및 관리를 제공하기 위해 Model Context Protocol (MCP)와 통합된 강력한 Discord 앱입니다.\n\n`@Architect`로 언급하거나 이전 메시지에 답변하여 Architect와 대화할 수 있습니다.\n\n**보안:** Architect는 서버의 보안을 보장하기 위해 **관리자** 권한이 있는 회원에게만 응답합니다.\n\n**참고:** 챗봇은 서버 채널에서만 사용 가능하며, 직접 메시지(DM)에는 응답하지 않습니다.\n\n자연어 명령을 사용하여 카테고리, 채널, 역할, 권한을 관리하고 메시지를 보내는 등 다양한 작업을 대화형 AI를 통해 수행할 수 있습니다!\n\n**지원 및 리소스:**\n- [지원 Discord 서버](https://discord.gg/Mgnaezufwc)에 참여하세요\n- [GitHub 프로젝트 저장소](https://github.com/rpurinton/architect)를 방문하세요\n\n행복한 건축! 🚀",
+    "help": "환영합니다 **Architect**! 🏗️\n\nArchitect는 AI 기반 자동화 및 관리를 제공하기 위해 Model Context Protocol (MCP)와 통합된 강력한 Discord 앱입니다.\n\n`@Architect`로 언급하거나 이전 메시지에 답변하여 Architect와 대화할 수 있습니다.\n\n**보안:** Architect는 서버의 보안을 보장하기 위해 **관리자** 권한이 있는 회원에게만 응답합니다.\n\n**참고:** 챗봇은 서버 채널에서만 사용 가능하며, 직접 메시지(DM)에는 응답하지 않습니다.\n\n자연어 명령을 사용하여 카테고리, 채널, 역할, 권한을 관리하고 메시지를 보내는 등 다양한 작업을 대화형 AI를 통해 수행할 수 있습니다!\n\n**지원 및 리소스:**\n- [지원 Discord 서버](https://discord.gg/QSBxQnX7PF)에 참여하세요\n- [GitHub 프로젝트 저장소](https://github.com/purinton/architect)를 방문하세요\n\n행복한 건축! 🚀",
     "cleared": "이 채널의 내부 채팅 기록이 지워졌습니다.",
     "permissions_error": "이 명령을 실행하려면 **관리자** 권한이 필요합니다.",
     "error": "요청을 처리하는 동안 오류가 발생했습니다. 나중에 다시 시도해 주세요."

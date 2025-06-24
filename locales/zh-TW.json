@@ -1,5 +1,5 @@
 {
-    "help": "歡迎來到 **Architect**! 🏗️\n\nArchitect 是一個強大的 Discord 應用程式，集成了模型上下文協議 (MCP)，為您的 Discord 伺服器提供 AI 驅動的自動化和管理功能。\n\n您可以通過提及 `@Architect` 或回覆其之前的消息來與 Architect 聊天。\n\n**安全性：** Architect 只會回覆擁有 **Administrator** 權限的成員，以確保您伺服器的安全。\n\n**注意：** 聊天機器人僅在伺服器頻道中可用，並且不會回覆直接消息 (DM)。\n\n使用自然語言命令來管理類別、頻道、角色、權限、發送消息等等——所有這些都通過對話式 AI 完成！\n\n**支援與資源：**\n- 加入我們的 [支援 Discord 伺服器](https://discord.gg/Mgnaezufwc)\n- 訪問我們的 [GitHub 專案庫](https://github.com/rpurinton/architect)\n\n祝您建設愉快！🚀",
+    "help": "歡迎來到 **Architect**! 🏗️\n\nArchitect 是一個強大的 Discord 應用程式，集成了模型上下文協議 (MCP)，為您的 Discord 伺服器提供 AI 驅動的自動化和管理功能。\n\n您可以通過提及 `@Architect` 或回覆其之前的消息來與 Architect 聊天。\n\n**安全性：** Architect 只會回覆擁有 **Administrator** 權限的成員，以確保您伺服器的安全。\n\n**注意：** 聊天機器人僅在伺服器頻道中可用，並且不會回覆直接消息 (DM)。\n\n使用自然語言命令來管理類別、頻道、角色、權限、發送消息等等——所有這些都通過對話式 AI 完成！\n\n**支援與資源：**\n- 加入我們的 [支援 Discord 伺服器](https://discord.gg/QSBxQnX7PF)\n- 訪問我們的 [GitHub 專案庫](https://github.com/purinton/architect)\n\n祝您建設愉快！🚀",
     "cleared": "此頻道的內部聊天記錄已被清除。",
     "permissions_error": "此命令需要 **Administrator** 權限才能執行。",
     "error": "處理您的請求時發生錯誤。請稍後再試。"
