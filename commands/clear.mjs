@@ -1,5 +1,5 @@
 // Command handler for /clear
-export default async function ({ discord, log, msg, db }, interaction) {
+export default async function ({ client, log, msg, db }, interaction) {
     try {
         if (!interaction.member?.permissions?.has('ADMINISTRATOR')) {
             const content = msg('permissions_error', 'This command requires **Administrator** permissions to execute.');
@@ -7,7 +7,7 @@ export default async function ({ discord, log, msg, db }, interaction) {
             return;
         }
 
-        const appId = discord.user.id;
+        const appId = client.user.id;
         const guildId = interaction.guild.id;
         const channelId = interaction.channel.id;
 
