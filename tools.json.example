@@ -1,0 +1,25 @@
+{
+    "tools": [
+        {
+            "type": "web_search_preview",
+            "search_context_size": "medium"
+        },
+        {
+            "type": "image_generation",
+            "size": "auto",
+            "quality": "high",
+            "output_format": "png",
+            "background": "auto",
+            "moderation": "low"
+        },
+        {
+            "type": "mcp",
+            "server_label": "discord",
+            "server_url": "{mcpUrl}",
+            "headers": {
+                "Authorization": "Bearer {mcpToken}"
+            },
+            "require_approval": "never"
+        }
+    ]
+}

@@ -1,3 +1,6 @@
 {
-    "help": "Ovo je tekst pomoći."
+    "help": "Dobrodošli u **Architect**! 🏗️\n\nArchitect je moćna Discord aplikacija integrirana s Protokolom Model Konteksta (MCP) koja pruža automatizaciju i administraciju vođenu AI-jem za vaš Discord poslužitelj.\n\nMožete razgovarati s Architectom spominjući ga s `@Architect` ili odgovarajući na jednu od njegovih prethodnih poruka.\n\n**Sigurnost:** Architect će odgovarati samo članovima s **Administratorskim** privilegijama kako bi osigurao sigurnost vašeg poslužitelja.\n\n**Napomena:** Chatbot je dostupan samo u kanalima poslužitelja i ne odgovara na izravne poruke (DM-ove).\n\nKoristite naredbe na prirodnom jeziku za upravljanje kategorijama, kanalima, ulogama, dozvolama, slanje poruka i još mnogo toga - sve kroz konverzacijski AI!\n\n**Podrška i resursi:**\n- Pridružite se našemu [Discord poslužitelju za podršku](https://discord.gg/Mgnaezufwc)\n- Posjetite naš [GitHub projektni repozitorij](https://github.com/rpurinton/architect)\n\nSretno s gradnjom! 🚀",
+    "cleared": "Unutarnja povijest chata u ovom kanalu je izbrisana.",
+    "permissions_error": "Ova naredba zahtijeva **Administratorske** privilegije za izvršavanje.",
+    "error": "Došlo je do pogreške prilikom obrade vašeg zahtjeva. Pokušajte ponovo kasnije."
 }

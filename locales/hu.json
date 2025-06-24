@@ -1,3 +1,6 @@
 {
-    "help": "Ez a súgószöveg."
+    "help": "Üdvözöljük a **Architect**-ban! 🏗️\n\nAz Architect egy erőteljes Discord alkalmazás, amely a Model Context Protocol (MCP) integrációjával AI-alapú automatizálást és adminisztrációt biztosít a Discord szervered számára.\n\nBeszélgethetsz az Architecttel, ha megemlíted `@Architect`-t, vagy válaszolsz az egyik korábbi üzenetére.\n\n**Biztonság:** Az Architect csak az **Adminisztrátor** jogosultságokkal rendelkező tagoknak válaszol, hogy biztosítsa a szervered biztonságát.\n\n**Megjegyzés:** A chatbot csak a szerver csatornáiban érhető el, és nem válaszol közvetlen üzenetekre (DM-ekre).\n\nHasználj természetes nyelvű parancsokat a kategóriák, csatornák, szerepek, jogosultságok kezelésére, üzenetek küldésére és még sok másra – mindezt a beszélgetési AI-n keresztül!\n\n**Támogatás és források:**\n- Csatlakozz a [Támogató Discord Szerverhez](https://discord.gg/Mgnaezufwc)\n- Látogass el a [GitHub Projekt Tárhelyre](https://github.com/rpurinton/architect)\n\nBoldog építkezést! 🚀",
+    "cleared": "A belső csevegési előzmények ebben a csatornában törölve lettek.",
+    "permissions_error": "Ez a parancs **Adminisztrátor** jogosultságokat igényel a végrehajtáshoz.",
+    "error": "Hiba történt a kérésed feldolgozása során. Kérlek, próbáld újra később."
 }

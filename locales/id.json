@@ -1,3 +1,6 @@
 {
-    "help": "Ini adalah teks bantuan."
+    "help": "Selamat datang di **Architect**! 🏗️\n\nArchitect adalah aplikasi Discord yang kuat yang terintegrasi dengan Model Context Protocol (MCP) untuk menyediakan otomatisasi dan administrasi yang didorong oleh AI untuk server Discord Anda.\n\nAnda dapat mengobrol dengan Architect dengan menyebutnya dengan `@Architect` atau dengan membalas salah satu pesan sebelumnya.\n\n**Keamanan:** Architect hanya akan membalas anggota dengan hak **Administrator** untuk memastikan keamanan server Anda.\n\n**Catatan:** Chatbot hanya tersedia di saluran server dan tidak merespons pesan langsung (DM).\n\nGunakan perintah bahasa alami untuk mengelola kategori, saluran, peran, izin, mengirim pesan, dan banyak lagi—semua melalui AI percakapan!\n\n**Dukungan & Sumber Daya:**\n- Bergabunglah dengan [Server Dukungan Discord kami](https://discord.gg/Mgnaezufwc)\n- Kunjungi [Repositori Proyek GitHub kami](https://github.com/rpurinton/architect)\n\nSelamat membangun! 🚀",
+    "cleared": "Riwayat obrolan internal di saluran ini telah dibersihkan.",
+    "permissions_error": "Perintah ini memerlukan izin **Administrator** untuk dijalankan.",
+    "error": "Terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi nanti."
 }

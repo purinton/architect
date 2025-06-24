@@ -1,3 +1,6 @@
 {
-    "help": "Ez a súgószöveg."
+    "help": "Vítejte v **Architect**! 🏗️\n\nArchitect je výkonná aplikace pro Discord integrovaná s Protokolem Model Context (MCP), která poskytuje automatizaci a administraci řízenou AI pro váš server Discord.\n\nMůžete si s Architectem povídat tím, že ho zmíníte pomocí `@Architect` nebo odpovíte na jednu z jeho předchozích zpráv.\n\n**Bezpečnost:** Architect odpoví pouze členům s **Administrátorskými** oprávněními, aby zajistil bezpečnost vašeho serveru.\n\n**Poznámka:** Chatbot je k dispozici pouze v kanálech serveru a nereaguje na přímé zprávy (DM).\n\nPoužívejte příkazy v přirozeném jazyce k správě kategorií, kanálů, rolí, oprávnění, posílání zpráv a mnohem více - to vše prostřednictvím konverzační AI!\n\n**Podpora a zdroje:**\n- Připojte se k našemu [podpůrnému serveru Discord](https://discord.gg/Mgnaezufwc)\n- Navštivte naše [GitHub projektové úložiště](https://github.com/rpurinton/architect)\n\nŠťastné stavění! 🚀",
+    "cleared": "Interní historie chatu v tomto kanálu byla vymazána.",
+    "permissions_error": "Tento příkaz vyžaduje **Administrátorská** oprávnění k provedení.",
+    "error": "Při zpracování vaší žádosti došlo k chybě. Zkuste to prosím znovu později."
 }

@@ -60,3 +60,6 @@ node_modules/
 
 # Generic cache
 .cache
+
+# tools config
+tools.json

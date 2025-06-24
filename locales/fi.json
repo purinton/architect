@@ -1,3 +1,6 @@
 {
-    "help": "Tämä on ohjeteksti."
+    "help": "Tervetuloa **Architect**! 🏗️\n\nArchitect on tehokas Discord-sovellus, joka on integroitu Mallikontekstiprotokollaan (MCP) tarjotakseen AI-pohjaista automaatiota ja hallintoa Discord-palvelimellesi.\n\nVoit keskustella Architectin kanssa mainitsemalla sen `@Architect` tai vastaamalla sen aiempiin viesteihin.\n\n**Turvallisuus:** Architect vastaa vain jäsenille, joilla on **Ylläpitäjä**-oikeudet, varmistaakseen palvelimesi turvallisuuden.\n\n**Huom:** Chatbot on saatavilla vain palvelinkanavilla eikä vastaa suoriin viesteihin (DM). \n\nKäytä luonnollisen kielen komentoja hallitaksesi kategorioita, kanavia, rooleja, oikeuksia, lähettääksesi viestejä ja paljon muuta - kaikki keskustelun AI:n kautta!\n\n**Tuki & Resurssit:**\n- Liity [Tukipalvelimen Discordiin](https://discord.gg/Mgnaezufwc)\n- Vieraile [GitHub-projektivarastossamme](https://github.com/rpurinton/architect)\n\nOnnellista rakentamista! 🚀",
+    "cleared": "Tämän kanavan sisäinen keskusteluhistoria on tyhjennetty.",
+    "permissions_error": "Tämä komento vaatii **Ylläpitäjä**-oikeudet suorittaakseen.",
+    "error": "Virhe tapahtui käsitellessäsi pyyntöäsi. Yritä uudelleen myöhemmin."
 }

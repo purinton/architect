@@ -1,3 +1,6 @@
 {
-    "help": "Bu yardım metnidir."
+    "help": "Hoş geldiniz **Architect**! 🏗️\n\nArchitect, Discord sunucunuz için AI destekli otomasyon ve yönetim sağlamak amacıyla Model Context Protocol (MCP) ile entegre edilmiş güçlü bir Discord uygulamasıdır.\n\nArchitect ile `@Architect` yazarak veya önceki mesajlarından birine yanıt vererek sohbet edebilirsiniz.\n\n**Güvenlik:** Architect, sunucunuzun güvenliğini sağlamak için yalnızca **Yönetici** yetkisine sahip üyelere yanıt verecektir.\n\n**Not:** Sohbet botu yalnızca sunucu kanallarında mevcuttur ve doğrudan mesajlara (DM'ler) yanıt vermez.\n\nKategorileri, kanalları, rolleri, izinleri yönetmek, mesaj göndermek ve çok daha fazlasını doğal dil komutlarıyla yönetin—tüm bunları konuşma tabanlı AI ile yapın!\n\n**Destek & Kaynaklar:**\n- [Destek Discord Sunucumuza](https://discord.gg/Mgnaezufwc) katılın\n- [GitHub Proje Depomuza](https://github.com/rpurinton/architect) göz atın\n\nİyi inşaatlar! 🚀",
+    "cleared": "Bu kanaldaki iç sohbet geçmişi temizlendi.",
+    "permissions_error": "Bu komutun yürütülmesi için **Yönetici** izinleri gereklidir.",
+    "error": "İsteğinizi işlerken bir hata oluştu. Lütfen daha sonra tekrar deneyin."
 }

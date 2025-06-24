@@ -1,3 +1,6 @@
 {
-    "help": "Tai yra pagalbos tekstas."
+    "help": "Sveiki atvykę į **Architect**! 🏗️\n\nArchitect yra galinga Discord programa, integruota su Modelių konteksto protokolu (MCP), skirta teikti AI valdomą automatizavimą ir administravimą jūsų Discord serveriui.\n\nGalite bendrauti su Architect, paminėdami jį su `@Architect` arba atsakydami į vieną iš jo ankstesnių žinučių.\n\n**Saugumas:** Architect atsakys tik nariams, turintiems **Administrator** teises, kad užtikrintų jūsų serverio saugumą.\n\n**Pastaba:** Pokalbių robotas yra prieinamas tik serverio kanaluose ir nereaguoja į tiesioginius pranešimus (DM).\n\nNaudokite natūralios kalbos komandas, kad valdytumėte kategorijas, kanalus, roles, leidimus, siųstumėte žinutes ir dar daugiau - viską per pokalbių AI!\n\n**Pagalba ir ištekliai:**\n- Prisijunkite prie mūsų [Pagalbos Discord serverio](https://discord.gg/Mgnaezufwc)\n- Apsilankykite mūsų [GitHub projekto saugykloje](https://github.com/rpurinton/architect)\n\nSėkmės statant! 🚀",
+    "cleared": "Šio kanalo vidinė pokalbių istorija buvo išvalyta.",
+    "permissions_error": "Šiai komandai vykdyti reikalingos **Administrator** teisės.",
+    "error": "Įvyko klaida apdorojant jūsų užklausą. Prašome bandyti vėl vėliau."
 }

@@ -1,3 +1,6 @@
 {
-    "help": "Dit is de helptekst."
+    "help": "Welkom bij **Architect**! 🏗️\n\nArchitect is een krachtige Discord-app die is geïntegreerd met het Model Context Protocol (MCP) om AI-gestuurde automatisering en administratie voor je Discord-server te bieden.\n\nJe kunt met Architect chatten door het te vermelden met `@Architect` of door te reageren op een van zijn eerdere berichten.\n\n**Beveiliging:** Architect zal alleen reageren op leden met **Administrator**-privileges om de veiligheid van je server te waarborgen.\n\n**Opmerking:** De chatbot is alleen beschikbaar in serverkanalen en reageert niet op directe berichten (DM's).\n\nGebruik natuurlijke taalopdrachten om categorieën, kanalen, rollen, machtigingen, berichten te verzenden en nog veel meer te beheren - allemaal via conversatie-AI!\n\n**Ondersteuning & Bronnen:**\n- Sluit je aan bij onze [Ondersteunings Discord Server](https://discord.gg/Mgnaezufwc)\n- Bezoek onze [GitHub Project Repository](https://github.com/rpurinton/architect)\n\nVeel bouwplezier! 🚀",
+    "cleared": "De interne chatgeschiedenis in dit kanaal is gewist.",
+    "permissions_error": "Deze opdracht vereist **Administrator**-machtigingen om uit te voeren.",
+    "error": "Er is een fout opgetreden bij het verwerken van je verzoek. Probeer het later opnieuw."
 }

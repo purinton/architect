@@ -1,0 +1,28 @@
+import { z } from 'zod';
+import { getGuild, getMember, getRole, buildResponse } from '../toolHelpers.mjs';
+
+// Tool: assign-role-to-member
+// Assigns a role to a member in a guild.
+export default async function (server, toolName = 'discord-assign-role-to-member') {
+  server.tool(
+    toolName,
+    'Add a role to a guild member.',
+    {
+      guildId: z.string(),
+      memberId: z.string(),
+      roleId: z.string(),
+    },
+    async (args, extra) => {
+      const { guildId, memberId, roleId } = args;
+      const guild = getGuild(guildId);
+      const member = await getMember(guild, memberId);
+      const role = await getRole(guild, roleId);
+      try {
+        await member.roles.add(role.id);
+      } catch (err) {
+        throw new Error('Failed to assign role: ' + (err.message || err));
+      }
+      return buildResponse({ success: true, memberId, roleId });
+    }
+  );
+}

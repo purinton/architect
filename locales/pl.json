@@ -1,3 +1,6 @@
 {
-    "help": "To jest tekst pomocy."
+    "help": "Witaj w **Architect**! 🏗️\n\nArchitect to potężna aplikacja Discord zintegrowana z Protokół Modelu Kontekstowego (MCP), aby zapewnić automatyzację i administrację opartą na AI dla Twojego serwera Discord.\n\nMożesz rozmawiać z Architect, wspominając go za pomocą `@Architect` lub odpowiadając na jedną z jego wcześniejszych wiadomości.\n\n**Bezpieczeństwo:** Architect odpowiada tylko członkom z uprawnieniami **Administratora**, aby zapewnić bezpieczeństwo Twojego serwera.\n\n**Uwaga:** Chatbot jest dostępny tylko w kanałach serwera i nie odpowiada na wiadomości prywatne (DM).\n\nUżyj naturalnych poleceń językowych, aby zarządzać kategoriami, kanałami, rolami, uprawnieniami, wysyłać wiadomości i wiele więcej — wszystko za pomocą AI w rozmowie!\n\n**Wsparcie i zasoby:**\n- Dołącz do naszego [Serwera Wsparcia Discord](https://discord.gg/Mgnaezufwc)\n- Odwiedź nasz [Repozytorium Projektu na GitHubie](https://github.com/rpurinton/architect)\n\nSzczęśliwego budowania! 🚀",
+    "cleared": "Historia czatu wewnętrznego w tym kanale została wyczyszczona.",
+    "permissions_error": "To polecenie wymaga uprawnień **Administratora** do wykonania.",
+    "error": "Wystąpił błąd podczas przetwarzania Twojej prośby. Proszę spróbować ponownie później."
 }

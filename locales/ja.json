@@ -1,3 +1,6 @@
 {
-    "help": "これはヘルプテキストです。"
+    "help": "ようこそ **Architect** へ！ 🏗️\n\nArchitectは、AI駆動の自動化と管理を提供する強力なDiscordアプリで、Model Context Protocol (MCP) に統合されています。\n\n`@Architect` でメンションするか、Architectの以前のメッセージに返信することで、Architectとチャットできます。\n\n**セキュリティ：** Architectは、サーバーのセキュリティを確保するために、**Administrator** 権限を持つメンバーにのみ返信します。\n\n**注意：** チャットボットはサーバーチャンネル内でのみ利用可能で、ダイレクトメッセージ（DM）には応答しません。\n\n自然言語コマンドを使用して、カテゴリ、チャンネル、ロール、権限の管理、メッセージの送信などを行うことができます。すべて会話型AIを通じて！\n\n**サポートとリソース：**\n- [サポートDiscordサーバー](https://discord.gg/Mgnaezufwc) に参加\n- [GitHubプロジェクトリポジトリ](https://github.com/rpurinton/architect) を訪問\n\n楽しいビルディングを！ 🚀",
+    "cleared": "このチャンネルの内部チャット履歴がクリアされました。",
+    "permissions_error": "このコマンドを実行するには、**Administrator** 権限が必要です。",
+    "error": "リクエストの処理中にエラーが発生しました。後でもう一度お試しください。"
 }
