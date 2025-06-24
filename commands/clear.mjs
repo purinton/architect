@@ -1,28 +1,28 @@
-import log from '../log.mjs';
-import { getMsg } from '../locales.mjs';
-import { delKey } from '../custom/redis.mjs';
-
 // Command handler for /clear
-export default async function (interaction) {
+export default async function ({ discord, log, msg, db }, interaction) {
     try {
         if (!interaction.member?.permissions?.has('ADMINISTRATOR')) {
-            const errMsg = getMsg(interaction.locale, "permissions_error", "This command requires **Administrator** permissions to execute.");
-            await interaction.reply({
-                content: errMsg,
-                flags: 1 << 6, // EPHEMERAL
-            });
+            const content = msg('permissions_error', 'This command requires **Administrator** permissions to execute.');
+            await interaction.reply({ content, flags: 1 << 6, });
             return;
         }
-        await delKey(interaction.channel.id);
-        const msgContent = getMsg(interaction.locale, "cleared", "The internal chat history in this channel has been cleared.");
-        await interaction.reply({ content: msgContent });
+
+        const appId = discord.user.id;
+        const guildId = interaction.guild.id;
+        const channelId = interaction.channel.id;
+
+        await db.query(
+            'DELETE FROM channels WHERE app_id = ? AND guild_id = ? AND channel_id = ?',
+            [appId, guildId, channelId]
+        );
+
+        const content = msg('cleared', "The internal chat history in this channel has been cleared.");
+        await interaction.reply({ content });
     } catch (err) {
         log.error("Error in /clear handler", err);
         try {
-            await interaction.reply({
-                content: getMsg(interaction.locale, "error", "An error occurred while processing your request. Please try again later."),
-                flags: 1 << 6,
-            });
+            const content = msg('error', 'An error occurred while processing your request. Please try again later.');
+            await interaction.reply({ content, flags: 1 << 6 });
         } catch (e) {
             log.error("Failed to reply with error message", e);
         }
