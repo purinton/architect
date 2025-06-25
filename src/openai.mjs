@@ -1,4 +1,39 @@
 import https from 'https';
+import path from 'path';
+import fs from 'fs';
+
+// Helper to recursively strip null, undefined, false, empty array/object
+function stripFalsy(obj) {
+    if (Array.isArray(obj)) {
+        const arr = obj
+            .map(stripFalsy)
+            .filter(
+                v =>
+                    v !== null &&
+                    v !== undefined &&
+                    v !== false &&
+                    !(Array.isArray(v) && v.length === 0) &&
+                    !(typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0)
+            );
+        return arr.length > 0 ? arr : undefined;
+    } else if (typeof obj === 'object' && obj !== null) {
+        const cleaned = {};
+        for (const [key, value] of Object.entries(obj)) {
+            const v = stripFalsy(value);
+            if (
+                v !== null &&
+                v !== undefined &&
+                v !== false &&
+                !(Array.isArray(v) && v.length === 0) &&
+                !(typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0)
+            ) {
+                cleaned[key] = v;
+            }
+        }
+        return Object.keys(cleaned).length > 0 ? cleaned : undefined;
+    }
+    return obj;
+}
 
 async function getKey(db, appId, guildId, channelId) {
     const [rows] = await db.execute(
@@ -82,7 +117,9 @@ export async function getReply(log, db, openai, appId, guild, channel, messages)
             });
             continue;
         }
-        let text = JSON.stringify(message);
+        // Strip falsy values before stringifying
+        const cleanedMessage = stripFalsy(message);
+        let text = JSON.stringify(cleanedMessage);
         const contentArr = [{ type: 'input_text', text }];
 
         let attachmentsIterable = [];
