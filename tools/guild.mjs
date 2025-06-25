@@ -119,8 +119,9 @@ export default async function ({ mcpServer, toolName, log, discord }) {
           Object.entries(auditSettings || {}).filter(
             ([key, value]) =>
               value !== undefined &&
-              value !== null &&
-              !(typeof value === 'string' && value.trim() === '')
+              !(typeof value === 'string' && value.trim() === '') &&
+              !(typeof value === 'number' && value === null) &&
+              value !== null
           )
         );
         log.debug(`[${toolName}] Cleaned audit log options`, { options });
