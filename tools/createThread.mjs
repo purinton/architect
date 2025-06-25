@@ -1,10 +1,9 @@
-import { z } from 'zod';
-import { getGuild, getChannel, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: create-thread
 // Creates a thread in a channel.
-export default async function (server, toolName = 'discord-create-thread') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Create a thread in a channel.',
     {
@@ -14,10 +13,11 @@ export default async function (server, toolName = 'discord-create-thread') {
       autoArchiveDuration: z.number().optional(),
       reason: z.string().optional(),
     },
-    async (args, extra) => {
-      const { guildId, channelId, name, autoArchiveDuration, reason } = args;
-      const guild = getGuild(guildId);
-      const channel = await getChannel(guild, channelId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, channelId, name, autoArchiveDuration, reason } = _args;
+      const guild = await discord.getGuild(guildId);
+      const channel = await discord.getChannel(guild, channelId);
       if (typeof channel.threads?.create !== 'function') throw new Error('Channel cannot create threads.');
       let thread;
       try {
@@ -25,6 +25,7 @@ export default async function (server, toolName = 'discord-create-thread') {
       } catch (err) {
         throw new Error('Failed to create thread: ' + (err.message || err));
       }
+      log.debug(`${toolName} Response`, { threadId: thread.id });
       return buildResponse({ success: true, threadId: thread.id });
     }
   );

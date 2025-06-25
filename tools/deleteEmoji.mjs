@@ -1,10 +1,9 @@
-import { z } from 'zod';
-import { getGuild, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: delete-emoji
 // Deletes a custom emoji from a guild.
-export default async function (server, toolName = 'discord-delete-emoji') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Remove a custom emoji from the guild.',
     {
@@ -12,16 +11,18 @@ export default async function (server, toolName = 'discord-delete-emoji') {
       emojiId: z.string(),
       reason: z.string().optional(),
     },
-    async (args, extra) => {
-      const { guildId, emojiId, reason } = args;
-      const guild = getGuild(guildId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, emojiId, reason } = _args;
+      const guild = await discord.getGuild(guildId);
       const emoji = guild.emojis.cache.get(emojiId);
-      if (!emoji) throw new Error('Emoji not found. Please re-run with a valid Emoji ID.');
+      if (!emoji) throw new Error('Emoji not found');
       try {
         await emoji.delete(reason);
       } catch (err) {
         throw new Error('Failed to delete emoji: ' + (err.message || err));
       }
+      log.debug(`${toolName} Response`, { emojiId });
       return buildResponse({ success: true, emojiId });
     }
   );

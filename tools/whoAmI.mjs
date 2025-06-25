@@ -1,13 +1,13 @@
-import { z } from 'zod';
-import { buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
-export default async function (server, toolName = 'discord-who-am-i') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     "Returns the bot's own user record, including all available properties.",
     {},
     async (_args, _extra) => {
-      const user = global.discord.user;
+      log.debug(`${toolName} Request`, { _args });
+      const user = discord.user;
       if (!user) throw new Error('Bot user not found.');
       const userInfo = {
         id: user.id,

@@ -1,10 +1,9 @@
-import { z } from 'zod';
-import { getGuild, getMember, getRole, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: assign-role-to-member
 // Assigns a role to a member in a guild.
-export default async function (server, toolName = 'discord-assign-role-to-member') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Add a role to a guild member.',
     {
@@ -12,16 +11,18 @@ export default async function (server, toolName = 'discord-assign-role-to-member
       memberId: z.string(),
       roleId: z.string(),
     },
-    async (args, extra) => {
-      const { guildId, memberId, roleId } = args;
-      const guild = getGuild(guildId);
-      const member = await getMember(guild, memberId);
-      const role = await getRole(guild, roleId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, memberId, roleId } = _args;
+      const guild = await discord.getGuild(guildId);
+      const member = await discord.getMember(guild, memberId);
+      const role = await discord.getRole(guild, roleId);
       try {
         await member.roles.add(role.id);
       } catch (err) {
         throw new Error('Failed to assign role: ' + (err.message || err));
       }
+      log.debug(`${toolName} Response`, { memberId, roleId });
       return buildResponse({ success: true, memberId, roleId });
     }
   );

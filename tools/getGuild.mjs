@@ -1,14 +1,16 @@
-import { z } from 'zod';
-import { getGuild, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
-export default async function (server, toolName = 'discord-get-guild') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Returns all details about a given guild/server, excluding channels, roles, and members.',
     { guildId: z.string() },
-    async (args, extra) => {
-      const { guildId } = args;
-      const guild = getGuild(guildId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId } = _args;
+      const guild = discord.guilds.cache.get(guildId) || await discord.guilds.fetch(guildId).catch(() => null);
+      if (!guild) return buildResponse({ error: 'Guild not found' }, { status: 404 });
+
       let owner = { id: guild.ownerId };
       try {
         const ownerMember = guild.members?.cache.get(guild.ownerId) || await guild.members?.fetch(guild.ownerId).catch(() => null);
@@ -77,8 +79,14 @@ export default async function (server, toolName = 'discord-get-guild') {
         approximateMemberCount: guild.approximateMemberCount,
         approximatePresenceCount: guild.approximatePresenceCount,
       };
-      const guildInfo = Object.fromEntries(Object.entries(base).filter(([_, v]) => v !== undefined && v !== null));
-      return buildResponse({ guild: guildInfo });
+      const response = {
+        ...base,
+        owner,
+        systemChannel,
+        // ...other properties...
+      };
+      log.debug(`${toolName} Response`, { response });
+      return buildResponse(response);
     }
   );
 }

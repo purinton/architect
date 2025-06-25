@@ -1,14 +1,14 @@
-import { z } from 'zod';
-import { getGuild, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
-export default async function (server, toolName = 'discord-list-channels') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Returns a concise list of channels in a guild, with only the most crucial high-level information. Supports limit and always fetches from API if not in cache.',
     { guildId: z.string(), limit: z.number().min(1).max(500).optional() },
-    async (args, extra) => {
-      const { guildId, limit = 500 } = args;
-      const guild = getGuild(guildId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, limit = 500 } = _args;
+      const guild = discord.guilds.cache.get(guildId);
       let allChannels;
       try {
         allChannels = Array.from((await guild.channels.fetch()).values());
@@ -39,31 +39,12 @@ export default async function (server, toolName = 'discord-list-channels') {
           type: ch.type,
           position: ch.rawPosition,
           parentId: ch.parentId,
-          category: ch.parentId ? categoryMap[ch.parentId] : undefined,
-          nsfw: ch.nsfw || false,
-          locked: ch.locked || false,
-          private: isPrivate,
+          isPrivate,
         };
       }
-      const uncategorized = [];
-      const categorized = {};
-      otherChannels.forEach(ch => {
-        if (ch.parentId && categoryMap[ch.parentId]) {
-          if (!categorized[ch.parentId]) categorized[ch.parentId] = [];
-          categorized[ch.parentId].push(channelSummary(ch));
-        } else {
-          uncategorized.push(channelSummary(ch));
-        }
-      });
-      const result = {
-        categories: categories.map(cat => ({
-          id: cat.id,
-          name: cat.name,
-          channels: categorized[cat.id] || [],
-        })),
-        uncategorized,
-      };
-      return buildResponse(result);
+      const channelList = otherChannels.map(channelSummary);
+      log.debug(`${toolName} Response`, { response: channelList });
+      return buildResponse(channelList);
     }
   );
 }

@@ -1,10 +1,9 @@
-import { z } from 'zod';
-import { getGuild, getRole, cleanOptions, toPascalCasePerms, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: update-role
 // Updates properties of a role in a guild, with improved error handling and summary return.
-export default async function (server, toolName = 'discord-update-role') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Change role name, permissions, color, hoist status, and more. Returns updated role summary.',
     {
@@ -17,14 +16,15 @@ export default async function (server, toolName = 'discord-update-role') {
       permissions: z.array(z.string()).optional(),
       position: z.number().optional(),
     },
-    async (args, extra) => {
-      const { guildId, roleId, ...updateFields } = args;
-      const guild = getGuild(guildId);
-      const role = await getRole(guild, roleId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, roleId, ...updateFields } = _args;
+      const guild = await discord.getGuild(guildId);
+      const role = await discord.getRole(guild, roleId);
       if (Array.isArray(updateFields.permissions)) {
-        updateFields.permissions = updateFields.permissions.map(toPascalCasePerms);
+        updateFields.permissions = updateFields.permissions.map(discord.toPascalCasePerms);
       }
-      const cleaned = cleanOptions(updateFields);
+      const cleaned = discord.cleanOptions(updateFields);
       let updatedRole;
       try {
         updatedRole = await role.edit(cleaned);
@@ -40,6 +40,7 @@ export default async function (server, toolName = 'discord-update-role') {
         permissions: updatedRole.permissions?.toArray?.() || [],
         position: updatedRole.position,
       };
+      log.debug(`${toolName} Response`, { response: { success: true, updated: summary } });
       return buildResponse({ success: true, updated: summary });
     }
   );

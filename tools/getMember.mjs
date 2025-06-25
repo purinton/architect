@@ -1,15 +1,15 @@
-import { z } from 'zod';
-import { getGuild, getMember, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
-export default async function (server, toolName = 'discord-get-member') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Returns all available details about a given member, including all properties, roles, presence, and user info.',
     { guildId: z.string(), memberId: z.string() },
-    async (args, extra) => {
-      const { guildId, memberId } = args;
-      const guild = getGuild(guildId);
-      const member = await getMember(guild, memberId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, memberId } = _args;
+      const guild = await discord.guilds.fetch(guildId);
+      const member = await guild.members.fetch(memberId);
       const user = member.user;
       const presence = member.presence ? {
         status: member.presence.status,
@@ -41,28 +41,12 @@ export default async function (server, toolName = 'discord-get-member') {
           discriminator: user.discriminator,
           tag: user.tag,
           avatar: user.displayAvatarURL?.({ dynamic: true, size: 1024 }),
-          bot: user.bot,
-          createdAt: user.createdAt,
+          bot: user.bot
         } : undefined,
         presence,
-        deaf: member.deaf,
-        mute: member.mute,
-        bannable: member.bannable,
-        kickable: member.kickable,
-        manageable: member.manageable,
-        voice: member.voice ? {
-          channelId: member.voice.channelId,
-          deaf: member.voice.deaf,
-          mute: member.voice.mute,
-          streaming: member.voice.streaming,
-          selfDeaf: member.voice.selfDeaf,
-          selfMute: member.voice.selfMute,
-          sessionId: member.voice.sessionId,
-        } : undefined,
-        flags: member.flags?.toArray?.() || undefined,
       };
-      const cleanMemberInfo = Object.fromEntries(Object.entries(memberInfo).filter(([_, v]) => v !== undefined && v !== null));
-      return buildResponse(cleanMemberInfo);
+      log.debug(`${toolName} Response`, { response: memberInfo });
+      return buildResponse(memberInfo);
     }
   );
 }

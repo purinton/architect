@@ -1,10 +1,7 @@
-import { z } from 'zod';
-import { getGuild, getChannel, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
-// Tool: create-invite
-// Creates a new invite link for a channel in a guild.
-export default async function (server, toolName = 'discord-create-invite') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Generate a new invite link for a channel with specific parameters.',
     {
@@ -16,10 +13,11 @@ export default async function (server, toolName = 'discord-create-invite') {
       unique: z.boolean().optional(),
       reason: z.string().optional(),
     },
-    async (args, extra) => {
-      const { guildId, channelId, maxAge, maxUses, temporary, unique, reason } = args;
-      const guild = getGuild(guildId);
-      const channel = await getChannel(guild, channelId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, channelId, maxAge, maxUses, temporary, unique, reason } = _args;
+      const guild = await discord.getGuild(guildId);
+      const channel = await discord.getChannel(guild, channelId);
       if (typeof channel.createInvite !== 'function') throw new Error('Channel cannot create invites for this channel.');
       let invite;
       try {
@@ -27,6 +25,7 @@ export default async function (server, toolName = 'discord-create-invite') {
       } catch (err) {
         throw new Error('Failed to create invite: ' + (err.message || err));
       }
+      log.debug(`${toolName} Response`, { code: invite.code, url: invite.url });
       return buildResponse({ success: true, code: invite.code, url: invite.url });
     }
   );

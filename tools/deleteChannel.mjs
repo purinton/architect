@@ -1,10 +1,9 @@
-import { z } from 'zod';
-import { getGuild, getChannel, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: delete-channel
 // Deletes a channel from a guild.
-export default async function (server, toolName = 'discord-delete-channel') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Remove a specified channel from a guild.',
     {
@@ -12,16 +11,18 @@ export default async function (server, toolName = 'discord-delete-channel') {
       channelId: z.string(),
       reason: z.string().optional(),
     },
-    async (args, extra) => {
-      const { guildId, channelId, reason } = args;
-      const guild = getGuild(guildId);
-      const channel = await getChannel(guild, channelId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, channelId, reason } = _args;
+      const guild = await discord.getGuild(guildId);
+      const channel = await discord.getChannel(guild, channelId);
       try {
         await channel.delete(reason);
       } catch (err) {
         throw new Error('Failed to delete channel: ' + (err.message || err));
       }
-      return buildResponse({ success: true, deletedChannelId: channelId });
+      log.debug(`${toolName} Response`, { channelId });
+      return buildResponse({ success: true, channelId });
     }
   );
 }

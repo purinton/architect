@@ -1,14 +1,12 @@
-import { z } from 'zod';
-import { getGuild, getChannel, mergePermissionOverwrites, buildResponse, toPascalCasePerms } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: set-permissions
 // Sets permission overrides for one or more channels, with merge or replace option.
-export default async function (server, toolName = 'discord-set-permissions') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Set permission overrides for one or more channels. Optionally merge with existing overrides or replace them entirely. Permission names in allow/deny will be auto-converted from ALL_CAPS to Discord.js PascalCase if needed.',
     {
-      guildId: z.string(),
       channels: z.array(z.object({
         channelId: z.string(),
         overrides: z.array(z.object({
@@ -18,16 +16,17 @@ export default async function (server, toolName = 'discord-set-permissions') {
           deny: z.array(z.string()).optional(),
         })),
       })),
+      guildId: z.string(),
       merge: z.boolean().optional().describe('If true, merge with existing overrides. If false, replace all overrides.'),
       reason: z.string().optional(),
     },
     async ({ guildId, channels, merge = false, reason }, _extra) => {
-      const guild = getGuild(guildId);
+      log.debug(`${toolName} Request`, { guildId, channels, merge, reason });
       const results = [];
       for (const { channelId, overrides } of channels) {
         let channel;
         try {
-          channel = await getChannel(guild, channelId);
+          channel = await discord.getChannel(channelId);
         } catch (err) {
           results.push({ channelId, error: 'Channel not found.' });
           continue;
@@ -39,13 +38,15 @@ export default async function (server, toolName = 'discord-set-permissions') {
         }));
         newOverrides = mergePermissionOverwrites(channel.permissionOverwrites, newOverrides, merge);
         try {
-          await channel.permissionOverwrites.set(newOverrides, { reason });
+          await channel.permissionOverwrites.set(newOverrides, reason);
           results.push({ channelId, success: true });
         } catch (err) {
           results.push({ channelId, error: err.message || err });
         }
       }
-      return buildResponse({ results });
+      const response = { results };
+      log.debug(`${toolName} Response`, { response });
+      return buildResponse(response);
     }
   );
 }

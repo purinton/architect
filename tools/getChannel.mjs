@@ -1,16 +1,16 @@
-import { z } from 'zod';
+import { z, buildResponse } from '@purinton/mcp-server';
 import { PermissionsBitField } from 'discord.js';
-import { getGuild, getChannel, buildResponse } from '../toolHelpers.mjs';
 
-export default async function (server, toolName = 'discord-get-channel') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Returns all details about a given channel, including all settings and permissions (not message history).',
     { guildId: z.string(), channelId: z.string() },
-    async (args, extra) => {
-      const { guildId, channelId } = args;
-      const guild = getGuild(guildId);
-      const channel = await getChannel(guild, channelId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, channelId } = _args;
+      const guild = await discord.guilds.fetch(guildId);
+      const channel = await discord.channels.fetch(channelId);
       const base = {
         id: channel.id,
         guildId: channel.guildId,
@@ -83,13 +83,12 @@ export default async function (server, toolName = 'discord-get-channel') {
             temporary: inv.temporary,
             createdAt: inv.createdAt,
             expiresAt: inv.expiresAt,
-            url: inv.url,
+            url: inv.url
           }));
         } catch (e) {
           invites = [{ error: e.message }];
         }
       }
-      base.invites = invites;
       let integrations = [];
       if (typeof guild.fetchIntegrations === 'function') {
         try {
@@ -139,8 +138,38 @@ export default async function (server, toolName = 'discord-get-channel') {
         integrations.push({ followedChannels });
       }
       base.integrations = integrations;
-      const channelInfo = Object.fromEntries(Object.entries(base).filter(([_, v]) => v !== undefined && v !== null));
-      return buildResponse(channelInfo);
+      const response = {
+        id: channel.id,
+        guildId: channel.guildId,
+        name: channel.name,
+        type: channel.type,
+        position: channel.rawPosition,
+        parentId: channel.parentId,
+        createdAt: channel.createdAt,
+        topic: channel.topic,
+        nsfw: channel.nsfw,
+        bitrate: channel.bitrate,
+        userLimit: channel.userLimit,
+        rateLimitPerUser: channel.rateLimitPerUser,
+        lastPinTimestamp: channel.lastPinAt || channel.lastPinTimestamp,
+        lastMessageId: channel.lastMessageId,
+        archived: channel.archived,
+        locked: channel.locked,
+        defaultAutoArchiveDuration: channel.defaultAutoArchiveDuration,
+        flags: channel.flags ? channel.flags.toArray?.() : undefined,
+        isAnnouncementChannel: channel.type === 5,
+        hideInactivityAfter: channel.defaultAutoArchiveDuration ? ({
+          60: '1h',
+          1440: '24h',
+          4320: '3d',
+          10080: '1w',
+        }[channel.defaultAutoArchiveDuration] || channel.defaultAutoArchiveDuration + 'm') : undefined,
+        permissionOverwrites,
+        invites,
+        integrations,
+      };
+      log.debug(`${toolName} Response`, { response });
+      return buildResponse(response);
     }
   );
 }

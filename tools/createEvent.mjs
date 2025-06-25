@@ -1,10 +1,7 @@
-import { z } from 'zod';
-import { getGuild, cleanOptions, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
-// Tool: create-event
-// Creates a scheduled event in a guild.
-export default async function (server, toolName = 'discord-create-event') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Create a scheduled event in a guild.',
     {
@@ -18,15 +15,17 @@ export default async function (server, toolName = 'discord-create-event') {
       privacyLevel: z.number().optional(),
       reason: z.string().optional(),
     },
-    async (args, extra) => {
-      const { guildId, ...eventData } = args;
-      const guild = getGuild(guildId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, ...eventData } = _args;
+      const guild = await discord.getGuild(guildId);
       let event;
       try {
-        event = await guild.scheduledEvents.create(cleanOptions(eventData));
+        event = await guild.scheduledEvents.create(discord.cleanOptions(eventData));
       } catch (err) {
         throw new Error('Failed to create event: ' + (err.message || err));
       }
+      log.debug(`${toolName} Response`, { eventId: event.id });
       return buildResponse({ success: true, eventId: event.id });
     }
   );

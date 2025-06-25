@@ -1,23 +1,23 @@
-import { z } from 'zod';
-import { getGuild, getChannel, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: create-webhook
 // Creates a webhook in a specified channel.
-export default async function (server, toolName = 'discord-create-webhook') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Create a webhook in a specified channel.',
     {
       guildId: z.string(),
       channelId: z.string(),
       name: z.string(),
-      avatar: z.string().optional(), // URL or base64
+      avatar: z.string().optional(),
       reason: z.string().optional(),
     },
-    async (args, extra) => {
-      const { guildId, channelId, name, avatar, reason } = args;
-      const guild = getGuild(guildId);
-      const channel = await getChannel(guild, channelId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, channelId, name, avatar, reason } = _args;
+      const guild = await discord.getGuild(guildId);
+      const channel = await discord.getChannel(guild, channelId);
       if (typeof channel.createWebhook !== 'function') throw new Error('Channel cannot create webhooks.');
       let webhook;
       try {
@@ -25,6 +25,7 @@ export default async function (server, toolName = 'discord-create-webhook') {
       } catch (err) {
         throw new Error('Failed to create webhook: ' + (err.message || err));
       }
+      log.debug(`${toolName} Response`, { webhookId: webhook.id, url: webhook.url });
       return buildResponse({ success: true, webhookId: webhook.id, url: webhook.url });
     }
   );

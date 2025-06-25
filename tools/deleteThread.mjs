@@ -1,10 +1,9 @@
-import { z } from 'zod';
-import { getGuild, getChannel, getThread, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: delete-thread
 // Deletes a thread in a channel.
-export default async function (server, toolName = 'discord-delete-thread') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Delete a thread in a channel.',
     {
@@ -13,16 +12,18 @@ export default async function (server, toolName = 'discord-delete-thread') {
       threadId: z.string(),
       reason: z.string().optional(),
     },
-    async (args, extra) => {
-      const { guildId, channelId, threadId, reason } = args;
-      const guild = getGuild(guildId);
-      const channel = await getChannel(guild, channelId);
-      const thread = await getThread(channel, threadId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, channelId, threadId, reason } = _args;
+      const guild = await discord.getGuild(guildId);
+      const channel = await discord.getChannel(guild, channelId);
+      const thread = await discord.getThread(channel, threadId);
       try {
         await thread.delete(reason);
       } catch (err) {
         throw new Error('Failed to delete thread: ' + (err.message || err));
       }
+      log.debug(`${toolName} Response`, { threadId });
       return buildResponse({ success: true, threadId });
     }
   );

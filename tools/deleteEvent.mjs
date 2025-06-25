@@ -1,10 +1,9 @@
-import { z } from 'zod';
-import { getGuild, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: delete-event
 // Deletes a scheduled event in a guild.
-export default async function (server, toolName = 'discord-delete-event') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Delete a scheduled event in a guild.',
     {
@@ -12,16 +11,18 @@ export default async function (server, toolName = 'discord-delete-event') {
       eventId: z.string(),
       reason: z.string().optional(),
     },
-    async (args, extra) => {
-      const { guildId, eventId, reason } = args;
-      const guild = getGuild(guildId);
-      let event;
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, eventId, reason } = _args;
+      const guild = await discord.getGuild(guildId);
+      const event = guild.scheduledEvents.cache.get(eventId);
+      if (!event) throw new Error('Event not found');
       try {
-        event = await guild.scheduledEvents.fetch(eventId);
         await event.delete(reason);
       } catch (err) {
         throw new Error('Failed to delete event: ' + (err.message || err));
       }
+      log.debug(`${toolName} Response`, { eventId });
       return buildResponse({ success: true, eventId });
     }
   );

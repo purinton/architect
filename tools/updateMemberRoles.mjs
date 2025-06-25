@@ -1,10 +1,9 @@
-import { z } from 'zod';
-import { getGuild, getMember, ensureArrayOfIds, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: update-member-roles
 // Sets or updates all roles for a member in a guild, validates role IDs, returns updated roles.
-export default async function (server, toolName = 'discord-update-member-roles') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Set or update all roles for a member in a guild. Validates role IDs and returns updated roles.',
     {
@@ -13,17 +12,20 @@ export default async function (server, toolName = 'discord-update-member-roles')
       roleIds: z.array(z.string()),
       reason: z.string().optional(),
     },
-    async (args, extra) => {
-      const { guildId, memberId, roleIds, reason } = args;
-      const guild = getGuild(guildId);
-      const member = await getMember(guild, memberId);
-      const validRoleIds = ensureArrayOfIds(guild, roleIds, 'role');
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, memberId, roleIds, reason } = _args;
+      const guild = await discord.guilds.fetch(guildId);
+      const member = await guild.members.fetch(memberId);
+      const validRoleIds = roleIds.filter(roleId => guild.roles.cache.has(roleId));
       try {
         await member.roles.set(validRoleIds, reason);
       } catch (err) {
         throw new Error('Failed to update member roles: ' + (err.message || err));
       }
-      return buildResponse({ success: true, memberId, roles: member.roles.cache.map(r => r.id) });
+      const response = { success: true, memberId, roles: member.roles.cache.map(r => r.id) };
+      log.debug(`${toolName} Response`, { response });
+      return buildResponse(response);
     }
   );
 }

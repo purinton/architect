@@ -1,10 +1,7 @@
-import { z } from 'zod';
-import { getGuild, getMember, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
-// Tool: ban-member
-// Bans a member from a guild.
-export default async function (server, toolName = 'discord-ban-member') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Ban a member with optional reason and duration.',
     {
@@ -13,15 +10,17 @@ export default async function (server, toolName = 'discord-ban-member') {
       reason: z.string().optional(),
       deleteMessageSeconds: z.number().optional(),
     },
-    async (args, extra) => {
-      const { guildId, memberId, reason, deleteMessageSeconds } = args;
-      const guild = getGuild(guildId);
-      const member = await getMember(guild, memberId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, memberId, reason, deleteMessageSeconds } = _args;
+      const guild = await discord.getGuild(guildId);
+      const member = await discord.getMember(guild, memberId);
       try {
         await member.ban({ reason, deleteMessageSeconds });
       } catch (err) {
         throw new Error('Failed to ban member: ' + (err.message || err));
       }
+      log.debug(`${toolName} Response`, { memberId });
       return buildResponse({ success: true, memberId });
     }
   );

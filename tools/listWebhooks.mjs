@@ -1,27 +1,27 @@
-import { z } from 'zod';
-import { getGuild, getChannel, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: list-webhooks
 // Lists all webhooks for a guild, or for a specified channel if channelId is provided.
-export default async function (server, toolName = 'discord-list-webhooks') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'List all webhooks for a guild, or for a specified channel.',
     {
       guildId: z.string(),
       channelId: z.string().optional(),
     },
-    async (args, extra) => {
-      const { guildId, channelId } = args;
-      const guild = getGuild(guildId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, channelId } = _args;
       let webhooks = [];
       try {
         if (channelId) {
-          const channel = await getChannel(guild, channelId);
+          const channel = await discord.getChannel(channelId);
           if (typeof channel.fetchWebhooks !== 'function') throw new Error('Channel cannot fetch webhooks.');
           const fetched = await channel.fetchWebhooks();
           webhooks = Array.from(fetched.values());
         } else {
+          const guild = await discord.getGuild(guildId);
           const fetched = await guild.fetchWebhooks();
           webhooks = Array.from(fetched.values());
         }
@@ -38,7 +38,9 @@ export default async function (server, toolName = 'discord-list-webhooks') {
         creator: wh.owner ? `${wh.owner.username}#${wh.owner.discriminator}` : undefined,
         avatar: wh.avatar,
       }));
-      return buildResponse(webhookList);
+      const response = { webhooks: webhookList };
+      log.debug(`${toolName} Response`, { response });
+      return buildResponse(response);
     }
   );
 }

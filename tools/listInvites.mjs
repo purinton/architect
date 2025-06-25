@@ -1,21 +1,20 @@
-import { z } from 'zod';
-import { getGuild, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: list-invites
 // Lists all invites in a guild.
-export default async function (server, toolName = 'discord-list-invites') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'List all active invite links in a guild.',
     {
       guildId: z.string(),
     },
-    async (args, extra) => {
-      const { guildId } = args;
-      const guild = getGuild(guildId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId } = _args;
       let invites;
       try {
-        invites = await guild.invites.fetch();
+        invites = await discord.guilds.cache.get(guildId).invites.fetch();
       } catch (err) {
         throw new Error('Failed to fetch invites: ' + (err.message || err));
       }
@@ -28,6 +27,7 @@ export default async function (server, toolName = 'discord-list-invites') {
         expiresAt: invite.expiresAt,
         url: invite.url,
       }));
+      log.debug(`${toolName} Response`, { response: inviteList });
       return buildResponse(inviteList);
     }
   );

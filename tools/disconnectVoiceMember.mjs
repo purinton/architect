@@ -1,10 +1,9 @@
-import { z } from 'zod';
-import { getGuild, getMember, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: disconnect-voice-member
 // Disconnects a member from a voice channel.
-export default async function (server, toolName = 'discord-disconnect-voice-member') {
-  server.tool(
+export default async function ({ mcpServer, toolName = 'discord-disconnect-voice-member', log, discord }) {
+  mcpServer.tool(
     toolName,
     'Disconnect a member from a voice channel.',
     {
@@ -12,15 +11,17 @@ export default async function (server, toolName = 'discord-disconnect-voice-memb
       memberId: z.string(),
       reason: z.string().optional(),
     },
-    async (args, extra) => {
-      const { guildId, memberId, reason } = args;
-      const guild = getGuild(guildId);
-      const member = await getMember(guild, memberId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, memberId, reason } = _args;
+      const guild = await discord.getGuild(guildId);
+      const member = await discord.getMember(guild, memberId);
       try {
         await member.voice.disconnect(reason);
       } catch (err) {
         throw new Error('Failed to disconnect member: ' + (err.message || err));
       }
+      log.debug(`${toolName} Response`, { memberId });
       return buildResponse({ success: true, memberId });
     }
   );

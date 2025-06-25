@@ -1,10 +1,9 @@
-import { z } from 'zod';
-import { getGuild, getMember, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: kick-member
 // Kicks a member from a guild.
-export default async function (server, toolName = 'discord-kick-member') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Kick a member from the guild.',
     {
@@ -12,16 +11,19 @@ export default async function (server, toolName = 'discord-kick-member') {
       memberId: z.string(),
       reason: z.string().optional(),
     },
-    async (args, extra) => {
-      const { guildId, memberId, reason } = args;
-      const guild = getGuild(guildId);
-      const member = await getMember(guild, memberId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, memberId, reason } = _args;
+      const guild = await discord.guilds.fetch(guildId);
+      const member = await guild.members.fetch(memberId);
       try {
         await member.kick(reason);
       } catch (err) {
         throw new Error('Failed to kick member: ' + (err.message || err));
       }
-      return buildResponse({ success: true, memberId });
+      const response = { success: true, memberId };
+      log.debug(`${toolName} Response`, { response });
+      return buildResponse(response);
     }
   );
 }

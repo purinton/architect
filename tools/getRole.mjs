@@ -1,20 +1,21 @@
-import { z } from 'zod';
-import { getGuild, getRole, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
-export default async function (server, toolName = 'discord-get-role') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Returns all available details about a given role, including all properties, permissions (bitfield and names), and a detailed list of members with that role.',
     { guildId: z.string(), roleId: z.string() },
-    async (args, extra) => {
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const args = _args;
       const guildId = args.guildId;
       const roleId = args.roleId;
-      const guild = getGuild(guildId);
-      const role = await getRole(guild, roleId);
+      const guild = await discord.guilds.fetch(guildId);
+      const role = await discord.roles.fetch(roleId);
       const permissions = role.permissions?.toArray?.() || [];
       const permissionsBitfield = role.permissions?.bitfield || null;
-      const members = guild.members.cache
-        .filter(m => m.roles.cache.has(roleId))
+      const members = await guild.members.fetch();
+      const filteredMembers = members.filter(m => m.roles.cache.has(roleId))
         .map(member => ({
           id: member.id,
           tag: member.user?.tag,
@@ -38,41 +39,21 @@ export default async function (server, toolName = 'discord-get-role') {
           premiumSince: member.premiumSince,
           communicationDisabledUntil: member.communicationDisabledUntil,
         }));
-      let managedUser = null;
-      if (role.managed) {
-        managedUser = guild.members.cache.find(m => m.user && m.user.bot && m.roles.cache.has(role.id));
-      }
-      const roleInfo = {
+      const response = {
         id: role.id,
         name: role.name,
         color: role.color,
-        hexColor: role.hexColor,
         position: role.position,
-        rawPosition: role.rawPosition,
         hoist: role.hoist,
         managed: role.managed,
         mentionable: role.mentionable,
         permissions,
         permissionsBitfield,
-        createdAt: role.createdAt,
-        createdTimestamp: role.createdTimestamp,
-        deleted: role.deleted,
-        icon: role.icon,
-        unicodeEmoji: role.unicodeEmoji,
-        tags: role.tags,
-        memberCount: members.length,
-        members,
-        managedUser: role.managed && managedUser ? {
-          id: managedUser.user.id,
-          username: managedUser.user.username,
-          discriminator: managedUser.user.discriminator,
-          bot: managedUser.user.bot
-        } : undefined,
+        memberCount: filteredMembers.length,
+        members: filteredMembers,
       };
-      function replacer(key, value) {
-        return typeof value === 'bigint' ? value.toString() : value;
-      }
-      return buildResponse(roleInfo, replacer);
+      log.debug(`${toolName} Response`, { response });
+      return buildResponse(response);
     }
   );
 }

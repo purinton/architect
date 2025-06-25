@@ -1,28 +1,30 @@
-import { z } from 'zod';
-import { getGuild, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: delete-webhook
 // Deletes a webhook by its ID.
-export default async function (server, toolName = 'discord-delete-webhook') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Delete a webhook by its ID.',
     {
       guildId: z.string(),
+      channelId: z.string(),
       webhookId: z.string(),
       reason: z.string().optional(),
     },
-    async (args, extra) => {
-      const { guildId, webhookId, reason } = args;
-      const guild = getGuild(guildId);
-      let webhook;
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, channelId, webhookId, reason } = _args;
+      const guild = await discord.getGuild(guildId);
+      const channel = await discord.getChannel(guild, channelId);
+      const webhook = channel.webhooks.cache.get(webhookId);
+      if (!webhook) throw new Error('Webhook not found');
       try {
-        webhook = await guild.fetchWebhook(webhookId);
-        if (!webhook) throw new Error('Webhook not found.');
         await webhook.delete(reason);
       } catch (err) {
         throw new Error('Failed to delete webhook: ' + (err.message || err));
       }
+      log.debug(`${toolName} Response`, { webhookId });
       return buildResponse({ success: true, webhookId });
     }
   );

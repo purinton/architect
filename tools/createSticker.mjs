@@ -1,10 +1,9 @@
-import { z } from 'zod';
-import { getGuild, cleanOptions, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: create-sticker
 // Creates a sticker in a guild.
-export default async function (server, toolName = 'discord-create-sticker') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Create a sticker in a guild.',
     {
@@ -15,15 +14,17 @@ export default async function (server, toolName = 'discord-create-sticker') {
       file: z.string(), // URL or base64
       reason: z.string().optional(),
     },
-    async (args, extra) => {
-      const { guildId, ...stickerData } = args;
-      const guild = getGuild(guildId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, ...stickerData } = _args;
+      const guild = await discord.getGuild(guildId);
       let sticker;
       try {
-        sticker = await guild.stickers.create(cleanOptions(stickerData));
+        sticker = await guild.stickers.create(discord.cleanOptions(stickerData));
       } catch (err) {
         throw new Error('Failed to create sticker: ' + (err.message || err));
       }
+      log.debug(`${toolName} Response`, { stickerId: sticker.id });
       return buildResponse({ success: true, stickerId: sticker.id });
     }
   );

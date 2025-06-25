@@ -1,10 +1,9 @@
-import { z } from 'zod';
-import { getGuild, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: unban-member
 // Unbans a user from a guild.
-export default async function (server, toolName = 'discord-unban-member') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Remove ban from a user.',
     {
@@ -12,15 +11,17 @@ export default async function (server, toolName = 'discord-unban-member') {
       userId: z.string(),
       reason: z.string().optional(),
     },
-    async (args, extra) => {
-      const { guildId, userId, reason } = args;
-      const guild = getGuild(guildId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, userId, reason } = _args;
       try {
-        await guild.bans.remove(userId, reason);
+        await discord.guilds.unban(guildId, userId, reason);
       } catch (err) {
         throw new Error('Failed to unban user: ' + (err.message || err));
       }
-      return buildResponse({ success: true, userId });
+      const response = { success: true, userId };
+      log.debug(`${toolName} Response`, { response });
+      return buildResponse(response);
     }
   );
 }

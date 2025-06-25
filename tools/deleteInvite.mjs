@@ -1,10 +1,9 @@
-import { z } from 'zod';
-import { getGuild, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: delete-invite
 // Deletes an invite link from a guild.
-export default async function (server, toolName = 'discord-delete-invite') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Revoke an invite link from a guild.',
     {
@@ -12,17 +11,18 @@ export default async function (server, toolName = 'discord-delete-invite') {
       code: z.string(),
       reason: z.string().optional(),
     },
-    async (args, extra) => {
-      const { guildId, code, reason } = args;
-      const guild = getGuild(guildId);
-      let invite;
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, code, reason } = _args;
+      const guild = await discord.getGuild(guildId);
+      const invite = guild.invites.cache.get(code);
+      if (!invite) throw new Error('Invite not found');
       try {
-        invite = await guild.invites.fetch(code);
-        if (!invite) throw new Error('Invite not found.');
         await invite.delete(reason);
       } catch (err) {
         throw new Error('Failed to delete invite: ' + (err.message || err));
       }
+      log.debug(`${toolName} Response`, { code });
       return buildResponse({ success: true, code });
     }
   );

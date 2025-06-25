@@ -1,21 +1,20 @@
-import { z } from 'zod';
-import { getGuild, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: list-bans
 // Lists all bans in a guild.
-export default async function (server, toolName = 'discord-list-bans') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'List all banned users in a guild.',
     {
       guildId: z.string(),
     },
-    async (args, extra) => {
+    async (args, _extra) => {
+      log.debug(`${toolName} Request`, { args });
       const { guildId } = args;
-      const guild = getGuild(guildId);
       let bans;
       try {
-        bans = await guild.bans.fetch();
+        bans = await discord.guilds.cache.get(guildId).bans.fetch();
       } catch (err) {
         throw new Error('Failed to fetch bans: ' + (err.message || err));
       }
@@ -25,6 +24,7 @@ export default async function (server, toolName = 'discord-list-bans') {
         discriminator: ban.user.discriminator,
         reason: ban.reason,
       }));
+      log.debug(`${toolName} Response`, { response: banList });
       return buildResponse(banList);
     }
   );

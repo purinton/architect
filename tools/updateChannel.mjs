@@ -1,40 +1,40 @@
-import { z } from 'zod';
-import { getGuild, getChannel, cleanOptions, toPascalCasePerms, mergePermissionOverwrites, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: update-channel
 // Updates properties of a channel in a guild, with validation for channel type and improved error handling.
-export default async function (server, toolName = 'discord-update-channel') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Update channel name, topic, NSFW flag, bitrate, user limit, and more. Validates properties for channel type and returns updated summary.',
     {
       guildId: z.string(),
       channelId: z.string(),
-      name: z.string().optional(),
-      topic: z.string().optional(),
-      nsfw: z.boolean().optional(),
-      position: z.number().optional(),
-      rateLimitPerUser: z.number().optional(),
-      parentId: z.string().optional(),
+      archived: z.boolean().optional(),
       bitrate: z.number().optional(),
-      userLimit: z.number().optional(),
+      locked: z.boolean().optional(),
+      name: z.string().optional(),
+      nsfw: z.boolean().optional(),
+      parentId: z.string().optional(),
       permissionOverwrites: z.array(z.object({
-        id: z.string(),
-        type: z.enum(['role', 'member']),
         allow: z.array(z.string()).optional(),
         deny: z.array(z.string()).optional(),
+        id: z.string(),
+        type: z.enum(['role', 'member']),
       })).optional(),
-      archived: z.boolean().optional(),
-      locked: z.boolean().optional(),
+      position: z.number().optional(),
+      rateLimitPerUser: z.number().optional(),
+      topic: z.string().optional(),
+      userLimit: z.number().optional(),
     },
-    async (args, extra) => {
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
       const textTypes = [0, 5, 15, 13]; // GUILD_TEXT, ANNOUNCEMENT, FORUM, STAGE
       const voiceTypes = [2]; // GUILD_VOICE
-      const { guildId, channelId, ...updateFields } = args;
-      const guild = getGuild(guildId);
-      const channel = await getChannel(guild, channelId);
+      const { guildId, channelId, ...updateFields } = _args;
+      const guild = discord.getGuild(guildId);
+      const channel = await discord.getChannel(guild, channelId);
       if (Array.isArray(updateFields.permissionOverwrites)) {
-        updateFields.permissionOverwrites = mergePermissionOverwrites(
+        updateFields.permissionOverwrites = discord.mergePermissionOverwrites(
           channel.permissionOverwrites,
           updateFields.permissionOverwrites
         );
@@ -57,27 +57,15 @@ export default async function (server, toolName = 'discord-update-channel') {
       if (updateFields.locked !== undefined && channel.type !== 11 && channel.type !== 12) {
         delete updateFields.locked;
       }
-      const cleaned = cleanOptions(updateFields);
-      let updatedChannel;
+      const cleaned = discord.cleanOptions(updateFields);
+      let response;
       try {
-        updatedChannel = await channel.edit(cleaned);
+        response = await channel.edit(cleaned);
       } catch (err) {
         throw new Error('Failed to update channel: ' + (err.message || err));
       }
-      const summary = {
-        id: updatedChannel.id,
-        name: updatedChannel.name,
-        type: updatedChannel.type,
-        topic: updatedChannel.topic,
-        nsfw: updatedChannel.nsfw,
-        position: updatedChannel.rawPosition,
-        parentId: updatedChannel.parentId,
-        bitrate: updatedChannel.bitrate,
-        userLimit: updatedChannel.userLimit,
-        archived: updatedChannel.archived,
-        locked: updatedChannel.locked,
-      };
-      return buildResponse({ success: true, updated: summary });
+      log.debug(`${toolName} Response`, { response });
+      return buildResponse(response);
     }
   );
 }

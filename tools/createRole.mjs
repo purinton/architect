@@ -1,10 +1,9 @@
-import { z } from 'zod';
-import { getGuild, cleanOptions, toPascalCasePerms, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: create-role
 // Creates a new role in a guild.
-export default async function (server, toolName = 'discord-create-role') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Create a new role with specified permissions and color.',
     {
@@ -16,19 +15,21 @@ export default async function (server, toolName = 'discord-create-role') {
       permissions: z.array(z.string()).optional(),
       position: z.number().optional(),
     },
-    async (args, extra) => {
-      const { guildId, ...roleData } = args;
-      const guild = getGuild(guildId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, ...roleData } = _args;
+      const guild = await discord.getGuild(guildId);
       if (Array.isArray(roleData.permissions)) {
-        roleData.permissions = roleData.permissions.map(toPascalCasePerms);
+        roleData.permissions = roleData.permissions.map(discord.toPascalCasePerms);
       }
-      const options = cleanOptions(roleData);
+      const options = discord.cleanOptions(roleData);
       let role;
       try {
         role = await guild.roles.create(options);
       } catch (err) {
         throw new Error('Failed to create role: ' + (err.message || err));
       }
+      log.debug(`${toolName} Response`, { roleId: role.id, name: role.name });
       return buildResponse({ success: true, roleId: role.id, name: role.name });
     }
   );

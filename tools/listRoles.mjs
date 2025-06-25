@@ -1,14 +1,15 @@
-import { z } from 'zod';
-import { getGuild, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
-export default async function (server, toolName = 'discord-list-roles') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Returns a concise list of roles in a guild, with only the most crucial high-level information.',
     { guildId: z.string() },
-    async (args, extra) => {
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const args = _args;
       const guildId = args.guildId;
-      const guild = getGuild(guildId);
+      const guild = discord.guilds.cache.get(guildId);
       const roles = guild.roles.cache
         .sort((a, b) => b.position - a.position)
         .map(role => {
@@ -34,6 +35,7 @@ export default async function (server, toolName = 'discord-list-roles') {
             } : undefined
           };
         });
+      log.debug(`${toolName} Response`, { response: roles });
       return buildResponse(roles);
     }
   );

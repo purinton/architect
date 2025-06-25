@@ -1,20 +1,20 @@
-import { z } from 'zod';
-import { getGuild, getChannel, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: list-threads
 // Lists all active threads in a channel.
-export default async function (server, toolName = 'discord-list-threads') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'List all active threads in a channel.',
     {
       guildId: z.string(),
       channelId: z.string(),
     },
-    async (args, extra) => {
-      const { guildId, channelId } = args;
-      const guild = getGuild(guildId);
-      const channel = await getChannel(guild, channelId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, channelId } = _args;
+      const guild = discord.getGuild(guildId);
+      const channel = await discord.getChannel(guild, channelId);
       if (typeof channel.threads?.fetchActive !== 'function') throw new Error('Channel cannot fetch threads.');
       let threads;
       try {
@@ -31,7 +31,9 @@ export default async function (server, toolName = 'discord-list-threads') {
         createdAt: th.createdAt,
         type: th.type,
       }));
-      return buildResponse(threadList);
+      const response = { threads: threadList };
+      log.debug(`${toolName} Response`, { response });
+      return buildResponse(response);
     }
   );
 }

@@ -1,16 +1,15 @@
-import { z } from 'zod';
-import { getGuild, cleanOptions, mergePermissionOverwrites, toPascalCasePerms, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: create-voice-channel
 // Creates a new voice channel in a specified guild and (optionally) category.
-export default async function (server, toolName = 'discord-create-voice-channel') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Create a new voice channel under a specified category.',
     {
       guildId: z.string(),
       name: z.string(),
-      parentId: z.string().optional(), // category ID
+      parentId: z.string().optional(),
       bitrate: z.number().optional(),
       userLimit: z.number().optional(),
       rtcRegion: z.string().optional(),
@@ -22,18 +21,19 @@ export default async function (server, toolName = 'discord-create-voice-channel'
         deny: z.array(z.string()).optional(),
       })).optional(),
     },
-    async (args, extra) => {
-      const { guildId, name, parentId, bitrate, userLimit, rtcRegion, position, permissionOverwrites } = args;
-      const guild = getGuild(guildId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, name, parentId, bitrate, userLimit, rtcRegion, position, permissionOverwrites } = _args;
+      const guild = await discord.getGuild(guildId);
       let processedPermissionOverwrites = permissionOverwrites;
       if (Array.isArray(permissionOverwrites)) {
-        processedPermissionOverwrites = mergePermissionOverwrites(null, permissionOverwrites.map(o => ({
+        processedPermissionOverwrites = permissionOverwrites.map(o => ({
           ...o,
-          allow: o.allow ? o.allow.map(toPascalCasePerms) : undefined,
-          deny: o.deny ? o.deny.map(toPascalCasePerms) : undefined,
-        })), false);
+          allow: o.allow ? o.allow.map(discord.toPascalCasePerms) : undefined,
+          deny: o.deny ? o.deny.map(discord.toPascalCasePerms) : undefined,
+        }));
       }
-      const options = cleanOptions({
+      const options = discord.cleanOptions({
         type: 2, // 2 = GUILD_VOICE
         name,
         parent: parentId,
@@ -49,6 +49,7 @@ export default async function (server, toolName = 'discord-create-voice-channel'
       } catch (err) {
         throw new Error('Failed to create voice channel: ' + (err.message || err));
       }
+      log.debug(`${toolName} Response`, { channelId: channel.id });
       return buildResponse({ success: true, channelId: channel.id });
     }
   );

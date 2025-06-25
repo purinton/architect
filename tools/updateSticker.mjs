@@ -1,10 +1,9 @@
-import { z } from 'zod';
-import { getGuild, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: update-sticker
 // Updates a sticker in a guild.
-export default async function (server, toolName = 'discord-update-sticker') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Update a sticker in a guild.',
     {
@@ -15,17 +14,19 @@ export default async function (server, toolName = 'discord-update-sticker') {
       tags: z.string().optional(),
       reason: z.string().optional(),
     },
-    async (args, extra) => {
-      const { guildId, stickerId, ...updateFields } = args;
-      const guild = getGuild(guildId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, stickerId, ...updateFields } = _args;
       let sticker;
       try {
-        sticker = await guild.stickers.fetch(stickerId);
+        sticker = await discord.guilds.cache.get(guildId).stickers.fetch(stickerId);
         await sticker.edit(updateFields);
       } catch (err) {
         throw new Error('Failed to update sticker: ' + (err.message || err));
       }
-      return buildResponse({ success: true, stickerId });
+      const response = { success: true, stickerId };
+      log.debug(`${toolName} Response`, { response });
+      return buildResponse(response);
     }
   );
 }

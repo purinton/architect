@@ -1,21 +1,20 @@
-import { z } from 'zod';
-import { getGuild, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: list-stickers
 // Lists all stickers in a guild.
-export default async function (server, toolName = 'discord-list-stickers') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'List all stickers in a guild.',
     {
       guildId: z.string(),
     },
-    async (args, extra) => {
-      const { guildId } = args;
-      const guild = getGuild(guildId);
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId } = _args;
       let stickers;
       try {
-        stickers = await guild.stickers.fetch();
+        stickers = await discord.guilds.cache.get(guildId).stickers.fetch();
       } catch (err) {
         throw new Error('Failed to fetch stickers: ' + (err.message || err));
       }
@@ -28,7 +27,9 @@ export default async function (server, toolName = 'discord-list-stickers') {
         available: st.available,
         url: st.url,
       }));
-      return buildResponse(stickerList);
+      const response = { stickers: stickerList };
+      log.debug(`${toolName} Response`, { response });
+      return buildResponse(response);
     }
   );
 }

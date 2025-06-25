@@ -1,24 +1,24 @@
-import { z } from 'zod';
-import { getGuild, getChannel, buildResponse } from '../toolHelpers.mjs';
+import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: get-messages
 // Fetches up to the last 100 messages from a channel in a guild. Supports pagination and always fetches from API if not in cache.
-export default async function (server, toolName = 'discord-get-messages') {
-  server.tool(
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
     toolName,
     'Fetch up to the last 100 messages from a channel. Supports pagination.',
     {
       guildId: z.string(),
       channelId: z.string(),
-      limit: z.number().min(1).max(100).optional(),
-      before: z.string().optional(),
       after: z.string().optional(),
+      before: z.string().optional(),
+      limit: z.number().min(1).max(100).optional(),
     },
-    async (args, extra) => {
-      const { guildId, channelId, limit = 100, before, after } = args;
-      const guild = getGuild(guildId);
-      const channel = await getChannel(guild, channelId);
-      if (typeof channel.messages?.fetch !== 'function') throw new Error('Channel cannot fetch messages.');
+    async (_args, _extra) => {
+      log.debug(`${toolName} Request`, { _args });
+      const { guildId, channelId, limit = 100, before, after } = _args;
+      const guild = discord.guilds.cache.get(guildId);
+      const channel = await discord.channels.fetch(channelId).catch(() => null);
+      if (!channel || typeof channel.messages?.fetch !== 'function') throw new Error('Channel cannot fetch messages.');
       const beforeId = before && before !== '' ? before : undefined;
       const afterId = after && after !== '' ? after : undefined;
       let messages;
@@ -46,6 +46,7 @@ export default async function (server, toolName = 'discord-get-messages') {
         referencedMessageId: msg.reference?.messageId,
         type: msg.type,
       }));
+      log.debug(`${toolName} Response`, { response: messageList });
       return buildResponse(messageList);
     }
   );
