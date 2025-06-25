@@ -84,8 +84,13 @@ export default async function ({ mcpServer, toolName, log, discord }) {
           log.error(`[${toolName}] updateSettings required for update method.`, { guildId });
           throw new Error('updateSettings required for update method.');
         }
-        await guild.edit(updateSettings);
-        log.debug(`[${toolName}] Guild updated`, { guildId, updateSettings });
+        // Clean updateSettings: remove null or undefined values
+        const cleanedUpdateSettings = Object.fromEntries(
+          Object.entries(updateSettings).filter(([_, v]) => v !== undefined && v !== null)
+        );
+        log.debug(`[${toolName}] Cleaned update settings`, { cleanedUpdateSettings });
+        await guild.edit(cleanedUpdateSettings);
+        log.debug(`[${toolName}] Guild updated`, { guildId, cleanedUpdateSettings });
         // Return only serializable settings after update
         const settings = {
           id: guild.id,
@@ -117,11 +122,10 @@ export default async function ({ mcpServer, toolName, log, discord }) {
         // Clean auditSettings: remove empty string, null, or undefined values
         const options = Object.fromEntries(
           Object.entries(auditSettings || {}).filter(
-            ([key, value]) =>
+            ([_, value]) =>
               value !== undefined &&
-              !(typeof value === 'string' && value.trim() === '') &&
-              !(typeof value === 'number' && value === null) &&
-              value !== null
+              value !== null &&
+              !(typeof value === 'string' && value.trim() === '')
           )
         );
         log.debug(`[${toolName}] Cleaned audit log options`, { options });
