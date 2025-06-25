@@ -23,7 +23,6 @@ const messageSettingsSchema = z.object({
 });
 
 export default async function ({ mcpServer, toolName, log, discord }) {
-  log.debug(`[${toolName}] Initializing message tool`);
   mcpServer.tool(
     toolName,
     'Send, get, bulkDelete, or react to messages in a channel.',
