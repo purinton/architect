@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 import 'dotenv/config';
-import { getReply } from './src/openai.mjs';
-import * as helpers from './src/helpers.mjs';
 import { createDb } from '@purinton/mysql';
+import { getReply } from './src/openai.mjs';
 import { createOpenAI } from '@purinton/openai';
 import { mcpServer } from '@purinton/mcp-server';
 import { createDiscord } from '@purinton/discord';
@@ -54,8 +53,6 @@ const discord = await createDiscord({
     }
 });
 registerSignals({ shutdownHook: () => discord.destroy() });
-
-discord.helpers = helpers;
 
 const port = parseInt(process.env.MCP_PORT || '1234', 10);
 const token = process.env.MCP_TOKEN;
