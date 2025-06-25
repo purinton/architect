@@ -32,14 +32,12 @@ export async function getRole(guild, roleId) {
   return role;
 }
 
-export async function getThread(channel, threadId) {
-  if (!channel.threads || typeof channel.threads.fetch !== 'function') {
-    throw new Error('Channel cannot fetch threads.');
+export async function getThread(guild, threadId) {
+  let thread = guild.channels.cache.get(threadId);
+  if (!thread) {
+    thread = await guild.channels.fetch(threadId).catch(() => null);
   }
-  const thread = await channel.threads.fetch(threadId).catch(err => {
-    throw new Error('Failed to fetch thread: ' + err.message);
-  });
-  if (!thread) throw new Error('Thread not found.');
+  if (!thread || typeof thread.isThread !== 'function' || !thread.isThread()) throw new Error('Thread not found.');
   return thread;
 }
 
