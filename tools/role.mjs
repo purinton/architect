@@ -9,19 +9,25 @@ const roleSettingsSchema = z.object({
   mentionable: z.boolean().optional(),
 });
 
+const memberRoleSchema = z.object({
+  memberId: z.union([z.string(), z.array(z.string())]),
+  roleId: z.union([z.string(), z.array(z.string())]),
+});
+
 export default async function ({ mcpServer, toolName, log, discord }) {
   mcpServer.tool(
     toolName,
-    'Create, list, get, update, or delete one or more roles by ID.',
+    'Create, list, get, update, delete roles, and add/remove role(s) from member(s).',
     {
       guildId: z.string().optional(),
       roleId: z.union([z.string(), z.array(z.string())]).optional(),
-      method: z.enum(['create', 'list', 'get', 'update', 'delete']),
+      method: z.enum(['create', 'list', 'get', 'update', 'delete', 'addToMember', 'removeFromMember']),
       roleSettings: z.union([roleSettingsSchema, z.array(roleSettingsSchema)]).nullable().optional(),
+      memberRole: memberRoleSchema.nullable().optional(),
     },
     async (_args, _extra) => {
       log.debug(`[${toolName}] Request`, { _args });
-      const { guildId, roleId, method, roleSettings } = _args;
+      const { guildId, roleId, method, roleSettings, memberRole } = _args;
       const roleIds = method === 'create' ? [] : Array.isArray(roleId) ? roleId.filter(Boolean) : roleId ? [roleId].filter(Boolean) : [];
       let settingsArr = Array.isArray(roleSettings) ? roleSettings : roleSettings ? [roleSettings] : [];
       if (method === 'create') {
@@ -111,6 +117,38 @@ export default async function ({ mcpServer, toolName, log, discord }) {
           await role.delete();
           log.debug(`[${toolName}] Role deleted`, { id: rid });
           results.push({ deleted: true, id: rid });
+        }
+        return buildResponse({ results });
+      } else if (method === 'addToMember' || method === 'removeFromMember') {
+        if (!guildId || !memberRole) {
+          log.error(`[${toolName}] guildId and memberRole required for ${method}.`);
+          throw new Error('guildId and memberRole required.');
+        }
+        const guild = discord.guilds.cache.get(guildId);
+        if (!guild) {
+          log.error(`[${toolName}] Guild not found.`, { guildId });
+          throw new Error('Guild not found.');
+        }
+        const memberIds = Array.isArray(memberRole.memberId) ? memberRole.memberId : [memberRole.memberId];
+        const roleIdsArr = Array.isArray(memberRole.roleId) ? memberRole.roleId : [memberRole.roleId];
+        const results = [];
+        for (const memberId of memberIds) {
+          const member = guild.members.cache.get(memberId);
+          if (!member) {
+            results.push({ error: 'Member not found', memberId });
+            continue;
+          }
+          for (const rid of roleIdsArr) {
+            if (method === 'addToMember') {
+              await member.roles.add(rid);
+              log.debug(`[${toolName}] Role added to member`, { memberId, rid });
+              results.push({ added: true, memberId, roleId: rid });
+            } else {
+              await member.roles.remove(rid);
+              log.debug(`[${toolName}] Role removed from member`, { memberId, rid });
+              results.push({ removed: true, memberId, roleId: rid });
+            }
+          }
         }
         return buildResponse({ results });
       } else {
