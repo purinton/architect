@@ -1,5 +1,24 @@
-
 import https from 'https';
+
+// Get the response_id for a given appId, guildId, channelId
+async function getKey(db, appId, guildId, channelId) {
+    const [rows] = await db.execute(
+        'SELECT response_id FROM channels WHERE app_id = ? AND guild_id = ? AND channel_id = ? LIMIT 1',
+        [appId, guildId, channelId]
+    );
+    if (rows && rows.length > 0) {
+        return rows[0].response_id;
+    }
+    return null;
+}
+
+// Set or update the response_id for a given appId, guildId, channelId
+async function setKey(db, appId, guildId, channelId, responseId) {
+    await db.execute(
+        `REPLACE INTO channels (app_id, guild_id, channel_id, response_id)`,
+        [appId, guildId, channelId, responseId]
+    );
+}
 
 // Helper to download image if not cached
 async function downloadImageToTmp(url, filename) {
@@ -29,15 +48,15 @@ async function downloadImageToTmp(url, filename) {
     });
 }
 
-export async function getReply(myUserId, guild, channel, messages) {
-    logger.debug('getReply called with:', { myUserId, guild_id: guild.id, channel_id: channel.id, messages_count: messages.size });
-    const config = JSON.parse(JSON.stringify(baseConfig));
+export async function getReply(db, openai, appId, guild, channel, messages) {
+    logger.debug('getReply called with:', { appId, guild_id: guild.id, channel_id: channel.id, messages_count: messages.size });
+    const config = JSON.parse(JSON.stringify(openai.promptConfig));
     if (!config.input || !config.input.length) {
         logger.error('OpenAI configuration does not contain any messages.');
         return { text: "An error occurred while processing your request. Please try again later.", images: [] };
     }
 
-    const previousResponseId = await getKey(channel.id);
+    const previousResponseId = await getKey(db, appId, guild.id, channel.id);
     let newConversation = false;
     if (previousResponseId) {
         config.input = [];
@@ -46,7 +65,7 @@ export async function getReply(myUserId, guild, channel, messages) {
         newConversation = true;
         if (Array.isArray(config.input[0].content) && config.input[0].content.length > 0) {
             config.input[0].content[0].text = config.input[0].content[0].text
-                .replace('{myUserId}', myUserId)
+                .replace('{appId}', appId)
                 .replace('{guildId}', guild.id)
                 .replace('{guildName}', guild.name)
                 .replace('{preferredLocale}', guild.preferredLocale || 'en-US')
@@ -129,7 +148,7 @@ export async function getReply(myUserId, guild, channel, messages) {
     let response;
     try {
         logger.debug('OpenAI API Call', config);
-        response = await getOpenAIClient().responses.create(config);
+        response = await openai.responses.create(config);
         logger.debug('OpenAI API Response', response);
     } catch (error) {
         logger.error('Error calling OpenAI API:', error);
@@ -176,55 +195,7 @@ export async function getReply(myUserId, guild, channel, messages) {
     }
 
     if (responseId) {
-        await setKey(channel.id, responseId);
+        await setKey(db, appId, guild.id, channel.id, responseId);
     }
     return { text: reply, images };
-}
-
-export function splitMsg(msg, maxLength) {
-    msg = msg.trim();
-    if (msg === '') return [];
-    if (msg.length <= maxLength) return [msg];
-    const chunks = [];
-    while (msg.length > maxLength) {
-        let chunk = msg.slice(0, maxLength);
-        let splitIndex = chunk.lastIndexOf('\n');
-        if (splitIndex === -1) splitIndex = chunk.lastIndexOf('.');
-        if (splitIndex === -1 || splitIndex < 1) splitIndex = maxLength;
-        else splitIndex++;
-        let part = msg.slice(0, splitIndex).trim();
-        chunks.push(part);
-        msg = msg.slice(splitIndex).trim();
-    }
-    if (msg !== '') chunks.push(msg);
-    return chunks;
-}
-
-export function convertTools(tools) {
-    if (!Array.isArray(tools)) return [];
-    return tools.map(tool => {
-        const parameters = { ...tool.inputSchema };
-        if (parameters.$schema) delete parameters.$schema;
-        if (parameters.description) delete parameters.description;
-        if (parameters.title) delete parameters.title;
-        let strict = true;
-        if (parameters.properties && typeof parameters.properties === 'object') {
-            const propKeys = Object.keys(parameters.properties);
-            const required = Array.isArray(parameters.required) ? parameters.required : [];
-            if (propKeys.length > 0 && required.length !== propKeys.length) {
-                strict = false;
-            } else if (propKeys.some(key => !required.includes(key))) {
-                strict = false;
-            }
-        }
-        return {
-            type: "function",
-            function: {
-                name: tool.name,
-                description: tool.description || '',
-                parameters,
-                strict
-            }
-        };
-    });
 }
