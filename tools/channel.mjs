@@ -1,8 +1,8 @@
 import { z, buildResponse } from '@purinton/mcp-server';
 
 const channelSettingsSchema = z.object({
-  name: z.string(),
-  type: z.number(), // Discord.js channel type
+  name: z.string().optional(),
+  type: z.number().optional(), // Discord.js channel type
   topic: z.string().optional(),
   nsfw: z.boolean().optional(),
   bitrate: z.number().optional(),
