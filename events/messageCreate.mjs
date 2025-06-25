@@ -36,7 +36,7 @@ async function processQueue(channelId) {
 }
 
 export default async function ({ client, log, msg, db, openai }, message) {
-    log.debug('messageCreate', { id: message.id, JSON.stringify(message) });
+    log.debug('messageCreate', { id: message.id, message: JSON.stringify(message) });
     if (message.author.id === message.client.user.id) return;
     if (!message.guild) message.reply('Direct messages are not supported. Please use a channel in a server.');
     const locale = message.guild?.preferredLocale || 'en-US';
