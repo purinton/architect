@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import 'dotenv/config';
+import { getReply } from './src/openai.mjs';
 import * as helpers from './src/helpers.mjs';
 import { createDb } from '@purinton/mysql';
 import { createOpenAI } from '@purinton/openai';
@@ -20,6 +21,7 @@ registerSignals({ shutdownHook: () => db.end() });
 
 const openai = await createOpenAI();
 openai.promptConfig = JSON.parse(fs.readFileSync(path(import.meta, 'prompt.json')), 'utf8');
+openai.getReply = getReply;
 
 const toolsFile = path(import.meta, 'tools.json');
 if (fs.existsSync(toolsFile)) {
