@@ -25,10 +25,10 @@ const messageSettingsSchema = z.object({
 export default async function ({ mcpServer, toolName, log, discord }) {
   mcpServer.tool(
     toolName,
-    'Send, get, bulkDelete, or react to messages in a channel.',
+    'Send, get, bulkDelete, react to, pin, or unpin messages in a channel.',
     {
       channelId: z.string(),
-      method: z.enum(['send', 'get', 'bulkDelete', 'react']),
+      method: z.enum(['send', 'get', 'bulkDelete', 'react', 'pin', 'unpin']),
       messageId: z.string().optional(),
       messageIds: z.array(z.string()).optional(),
       messageSettings: messageSettingsSchema.optional(),
@@ -57,6 +57,18 @@ export default async function ({ mcpServer, toolName, log, discord }) {
         if (!msg) throw new Error('Message not found.');
         await msg.react(emoji);
         return buildResponse({ reacted: true, messageId, emoji });
+      } else if (method === 'pin') {
+        if (!messageId) throw new Error('messageId required for pin.');
+        const msg = await channel.messages.fetch(messageId);
+        if (!msg) throw new Error('Message not found.');
+        await msg.pin();
+        return buildResponse({ pinned: true, messageId });
+      } else if (method === 'unpin') {
+        if (!messageId) throw new Error('messageId required for unpin.');
+        const msg = await channel.messages.fetch(messageId);
+        if (!msg) throw new Error('Message not found.');
+        await msg.unpin();
+        return buildResponse({ unpinned: true, messageId });
       } else {
         throw new Error('Invalid method.');
       }
