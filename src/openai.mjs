@@ -2,11 +2,16 @@ import https from 'https';
 import path from 'path';
 import fs from 'fs';
 
-// Helper to recursively strip null, undefined, false, empty array/object
-function stripFalsy(obj) {
+// Helper to recursively strip null, undefined, false, empty array/object, and avoid circular references
+function stripFalsy(obj, seen = new WeakSet(), depth = 0) {
+    if (depth > 20) return undefined; // Prevent excessive depth
+    if (obj && typeof obj === 'object') {
+        if (seen.has(obj)) return undefined; // Prevent circular refs
+        seen.add(obj);
+    }
     if (Array.isArray(obj)) {
         const arr = obj
-            .map(stripFalsy)
+            .map(item => stripFalsy(item, seen, depth + 1))
             .filter(
                 v =>
                     v !== null &&
@@ -19,7 +24,7 @@ function stripFalsy(obj) {
     } else if (typeof obj === 'object' && obj !== null) {
         const cleaned = {};
         for (const [key, value] of Object.entries(obj)) {
-            const v = stripFalsy(value);
+            const v = stripFalsy(value, seen, depth + 1);
             if (
                 v !== null &&
                 v !== undefined &&
