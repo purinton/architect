@@ -21,12 +21,14 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`[${toolName}] Request`, { _args });
       const { channelId, threadId, method, threadSettings } = _args;
-      const threadIds = Array.isArray(threadId) ? threadId : threadId ? [threadId] : [];
-      const settingsArr = Array.isArray(threadSettings) ? threadSettings : threadSettings ? [threadSettings] : [];
+      const threadIds = method === 'create' ? [] : Array.isArray(threadId) ? threadId.filter(Boolean) : threadId ? [threadId].filter(Boolean) : [];
+      let settingsArr = Array.isArray(threadSettings) ? threadSettings : threadSettings ? [threadSettings] : [];
       if (method === 'create') {
+        settingsArr = settingsArr.filter(s => s && typeof s.name === 'string' && s.name.trim());
+        log.debug(`[${toolName}] Final settingsArr for create`, { settingsArr });
         if (!channelId || !settingsArr.length) {
-          log.error(`[${toolName}] channelId and threadSettings required for create.`);
-          throw new Error('channelId and threadSettings required for create.');
+          log.error(`[${toolName}] channelId and valid threadSettings (with name) required for create.`);
+          throw new Error('channelId and valid threadSettings (with name) required for create.');
         }
         const channel = discord.channels.cache.get(channelId);
         if (!channel || !channel.threads) {
@@ -35,8 +37,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
         }
         const results = [];
         for (const settings of settingsArr) {
-          if (!settings.name) continue;
-          const created = await channel.threads.create(settings);
+          const created = await channel.threads.create({ ...settings });
           log.debug(`[${toolName}] Thread created`, { id: created.id });
           results.push({ created: true, id: created.id, name: created.name });
         }

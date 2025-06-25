@@ -13,7 +13,6 @@ const channelSettingsSchema = z.object({
   permissionOverwrites: z.any().optional(),
 });
 
-// Channel type constants (Discord.js v14)
 const VOICE_TYPES = [2, 13]; // 2: GUILD_VOICE, 13: GUILD_STAGE_VOICE
 const VOICE_ONLY_SETTINGS = ['bitrate', 'userLimit'];
 const NON_VOICE_ONLY_SETTINGS = ['topic', 'nsfw', 'rateLimitPerUser'];
@@ -21,10 +20,8 @@ const NON_VOICE_ONLY_SETTINGS = ['topic', 'nsfw', 'rateLimitPerUser'];
 function cleanSettingsForType(settings, type) {
   const cleaned = { ...settings };
   if (VOICE_TYPES.includes(type)) {
-    // Remove non-voice-only settings
     for (const key of NON_VOICE_ONLY_SETTINGS) delete cleaned[key];
   } else {
-    // Remove voice-only settings
     for (const key of VOICE_ONLY_SETTINGS) delete cleaned[key];
   }
   return cleaned;
@@ -43,11 +40,9 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`[${toolName}] Request`, { _args });
       const { guildId, channelId, method, channelSettings } = _args;
-      // For create, ignore channelId entirely
       const channelIds = method === 'create' ? [] : Array.isArray(channelId) ? channelId.filter(Boolean) : channelId ? [channelId].filter(Boolean) : [];
       let settingsArr = Array.isArray(channelSettings) ? channelSettings : channelSettings ? [channelSettings] : [];
       if (method === 'create') {
-        // Filter out invalid settings (missing name or type)
         settingsArr = settingsArr.filter(s => s && typeof s.name === 'string' && s.name.trim() && typeof s.type === 'number');
         log.debug(`[${toolName}] Final settingsArr for create`, { settingsArr });
         if (!guildId || !settingsArr.length) {

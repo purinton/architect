@@ -22,12 +22,14 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`[${toolName}] Request`, { _args });
       const { guildId, roleId, method, roleSettings } = _args;
-      const roleIds = Array.isArray(roleId) ? roleId : roleId ? [roleId] : [];
-      const settingsArr = Array.isArray(roleSettings) ? roleSettings : roleSettings ? [roleSettings] : [];
+      const roleIds = method === 'create' ? [] : Array.isArray(roleId) ? roleId.filter(Boolean) : roleId ? [roleId].filter(Boolean) : [];
+      let settingsArr = Array.isArray(roleSettings) ? roleSettings : roleSettings ? [roleSettings] : [];
       if (method === 'create') {
+        settingsArr = settingsArr.filter(s => s && typeof s.name === 'string' && s.name.trim());
+        log.debug(`[${toolName}] Final settingsArr for create`, { settingsArr });
         if (!guildId || !settingsArr.length) {
-          log.error(`[${toolName}] guildId and roleSettings required for create.`);
-          throw new Error('guildId and roleSettings required for create.');
+          log.error(`[${toolName}] guildId and valid roleSettings (with name) required for create.`);
+          throw new Error('guildId and valid roleSettings (with name) required for create.');
         }
         const guild = discord.guilds.cache.get(guildId);
         if (!guild) {
@@ -36,8 +38,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
         }
         const results = [];
         for (const settings of settingsArr) {
-          if (!settings.name) continue;
-          const created = await guild.roles.create({ data: settings });
+          const created = await guild.roles.create({ ...settings });
           log.debug(`[${toolName}] Role created`, { id: created.id });
           results.push({ created: true, id: created.id, name: created.name });
         }

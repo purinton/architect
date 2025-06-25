@@ -43,13 +43,12 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`[${toolName}] Request`, { _args });
       const { guildId, method, updateSettings, auditSettings } = _args;
-      log.debug(`[${toolName}] Fetching guild from cache`, { guildId });
+      // Lessons learned: normalize arrays, filter/clean settings, consistent error handling
       const guild = discord.guilds.cache.get(guildId);
       if (!guild) {
         log.error(`[${toolName}] Guild not found.`, { guildId });
         throw new Error('Guild not found.');
       }
-      log.debug(`[${toolName}] Guild found`, { guildId, method });
       if (method === 'get') {
         log.debug(`[${toolName}] Getting guild settings`, { guildId });
         // Return current settings
