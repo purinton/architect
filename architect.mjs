@@ -10,6 +10,7 @@ registerHandlers({ log });
 registerSignals({ log });
 
 const packageJson = JSON.parse(fs.readFileSync(path(import.meta, 'package.json')), 'utf8');
+const name = packageJson.name;
 const version = packageJson.version;
 const presence = { activities: [{ name: `🏗️ AI Admin v v${version}`, type: 4 }], status: 'online' };
 const db = await createDb({ log });
@@ -22,6 +23,7 @@ const discord = await createDiscord({
     rootDir: path(import.meta),
     context: {
         db,
+        openai,
         presence,
         version
     },
