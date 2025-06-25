@@ -19,7 +19,7 @@ export async function getMember(guild, memberId) {
   if (!member) {
     member = await guild.members.fetch(memberId).catch(() => null);
   }
-  if (!member) throw new Error('Member not found. Try discord-list-members first.');
+  if (!member) throw new Error('Member not found.');
   return member;
 }
 
@@ -28,7 +28,7 @@ export async function getRole(guild, roleId) {
   if (!role) {
     role = await guild.roles.fetch(roleId).catch(() => null);
   }
-  if (!role) throw new Error('Role not found. Please re-run with a valid Role ID.');
+  if (!role) throw new Error('Role not found.');
   return role;
 }
 
