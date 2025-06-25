@@ -15,7 +15,7 @@ async function getKey(db, appId, guildId, channelId) {
 // Set or update the response_id for a given appId, guildId, channelId
 async function setKey(db, appId, guildId, channelId, responseId) {
     await db.execute(
-        `REPLACE INTO channels (app_id, guild_id, channel_id, response_id)`,
+        `REPLACE INTO channels (app_id, guild_id, channel_id, response_id) VALUES (?, ?, ?, ?)`,
         [appId, guildId, channelId, responseId]
     );
 }
