@@ -1,12 +1,34 @@
 import { z, buildResponse } from '@purinton/mcp-server';
 
-// Define a stricter schema for embeds and files to be OpenAI-compatible
+// Discord embed schema: only fields you can actually set
 const embedSchema = z.object({
-  title: z.string().optional(),
-  description: z.string().optional(),
-  url: z.string().optional(),
+  title: z.string().max(256).optional(),
+  description: z.string().max(4096).optional(),
+  url: z.string().url().optional(),
+  timestamp: z.string().optional(), // ISO8601 string
   color: z.number().optional(),
-  // Add more fields as needed for your use case
+  footer: z.object({
+    text: z.string().max(2048),
+    icon_url: z.string().url().optional(),
+  }).optional(),
+  image: z.object({
+    url: z.string().url(),
+  }).optional(),
+  thumbnail: z.object({
+    url: z.string().url(),
+  }).optional(),
+  author: z.object({
+    name: z.string().max(256),
+    url: z.string().url().optional(),
+    icon_url: z.string().url().optional(),
+  }).optional(),
+  fields: z.array(
+    z.object({
+      name: z.string().max(256),
+      value: z.string().max(1024),
+      inline: z.boolean().optional(),
+    })
+  ).max(25).optional(),
 });
 const fileSchema = z.object({
   name: z.string(),
