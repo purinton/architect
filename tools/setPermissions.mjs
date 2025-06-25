@@ -5,7 +5,7 @@ import { z, buildResponse } from '@purinton/mcp-server';
 export default async function ({ mcpServer, toolName, log, discord }) {
   mcpServer.tool(
     toolName,
-    'Set permission overrides for one or more channels. Optionally merge with existing overrides or replace them entirely. Permission names in allow/deny will be auto-converted from ALL_CAPS to Discord.js PascalCase if needed.',
+    'Set permission overrides for one or more channels. Optionally merge with existing overrides or replace them entirely. Permission names in allow/deny will be auto-converted from ALL_CAPS to discord.helpers.js PascalCase if needed.',
     {
       channels: z.array(z.object({
         channelId: z.string(),
@@ -26,7 +26,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
       for (const { channelId, overrides } of channels) {
         let channel;
         try {
-          channel = await discord.getChannel(channelId);
+          channel = await discord.helpers.getChannel(channelId);
         } catch (err) {
           results.push({ channelId, error: 'Channel not found.' });
           continue;

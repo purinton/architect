@@ -8,7 +8,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId } = _args;
-      const guild = discord.guilds.cache.get(guildId) || await discord.guilds.fetch(guildId).catch(() => null);
+      const guild = discord.helpers.guilds.cache.get(guildId) || await discord.helpers.guilds.fetch(guildId).catch(() => null);
       if (!guild) return buildResponse({ error: 'Guild not found' }, { status: 404 });
 
       let owner = { id: guild.ownerId };

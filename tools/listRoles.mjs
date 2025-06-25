@@ -9,7 +9,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
       log.debug(`${toolName} Request`, { _args });
       const args = _args;
       const guildId = args.guildId;
-      const guild = discord.guilds.cache.get(guildId);
+      const guild = discord.helpers.guilds.cache.get(guildId);
       const roles = guild.roles.cache
         .sort((a, b) => b.position - a.position)
         .map(role => {

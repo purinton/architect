@@ -17,7 +17,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
       const { guildId, channelId, messageId, pin } = _args;
       let response;
       try {
-        const guild = await discord.guilds.fetch(guildId);
+        const guild = await discord.helpers.guilds.fetch(guildId);
         const channel = await guild.channels.fetch(channelId);
         const message = await channel.messages.fetch(messageId);
         

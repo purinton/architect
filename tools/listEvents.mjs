@@ -14,7 +14,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
       const { guildId } = _args;
       let events;
       try {
-        events = await discord.guilds.fetch(guildId).then(guild => guild.scheduledEvents.fetch());
+        events = await discord.helpers.guilds.fetch(guildId).then(guild => guild.scheduledEvents.fetch());
       } catch (err) {
         throw new Error('Failed to fetch events: ' + (err.message || err));
       }

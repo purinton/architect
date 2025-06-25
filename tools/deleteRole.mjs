@@ -14,8 +14,8 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, roleId, reason } = _args;
-      const guild = await discord.getGuild(guildId);
-      const role = await discord.getRole(guild, roleId);
+      const guild = await discord.helpers.getGuild(guildId);
+      const role = await discord.helpers.getRole(guild, roleId);
       if (!role) throw new Error('Role not found');
       try {
         await role.delete(reason);

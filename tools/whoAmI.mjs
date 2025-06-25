@@ -7,7 +7,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     {},
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
-      const user = discord.user;
+      const user = discord.helpers.user;
       if (!user) throw new Error('Bot user not found.');
       const userInfo = {
         id: user.id,

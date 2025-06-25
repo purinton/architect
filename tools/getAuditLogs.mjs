@@ -16,10 +16,10 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       const { guildId, actionType, userId, limit = 50, before } = _args;
       log.debug(`${toolName} Request`, { _args });
-      const guild = discord.getGuild(guildId);
+      const guild = discord.helpers.getGuild(guildId);
       let entries;
       try {
-        entries = await discord.fetchAuditLogEntries(guild, { actionType, userId, limit, before });
+        entries = await discord.helpers.fetchAuditLogEntries(guild, { actionType, userId, limit, before });
       } catch (err) {
         throw new Error('Failed to fetch audit logs: ' + (err.message || err));
       }

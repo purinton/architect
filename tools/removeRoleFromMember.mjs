@@ -17,7 +17,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
       const { guildId, memberId, roleId } = _args;
       let response;
       try {
-        const guild = await discord.guilds.fetch(guildId);
+        const guild = await discord.helpers.guilds.fetch(guildId);
         const member = await guild.members.fetch(memberId);
         const role = await guild.roles.fetch(roleId);
         await member.roles.remove(role);

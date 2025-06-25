@@ -14,9 +14,9 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, memberId, roleId } = _args;
-      const guild = await discord.getGuild(guildId);
-      const member = await discord.getMember(guild, memberId);
-      const role = await discord.getRole(guild, roleId);
+      const guild = await discord.helpers.getGuild(guildId);
+      const member = await discord.helpers.getMember(guild, memberId);
+      const role = await discord.helpers.getRole(guild, roleId);
       try {
         await member.roles.add(role.id);
       } catch (err) {

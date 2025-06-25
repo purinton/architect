@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import 'dotenv/config';
+import * as helpers from './src/helpers.mjs';
 import { createDb } from '@purinton/mysql';
 import { createOpenAI } from '@purinton/openai';
 import { mcpServer } from '@purinton/mcp-server';
@@ -13,10 +14,27 @@ const packageJson = JSON.parse(fs.readFileSync(path(import.meta, 'package.json')
 const name = packageJson.name;
 const version = packageJson.version;
 const presence = { activities: [{ name: `🏗️ AI Admin v v${version}`, type: 4 }], status: 'online' };
+
 const db = await createDb({ log });
 registerSignals({ shutdownHook: () => db.end() });
 
 const openai = await createOpenAI();
+openai.promptConfig = JSON.parse(fs.readFileSync(path(import.meta, 'prompt.json')), 'utf8');
+
+const toolsFile = path(import.meta, 'tools.json');
+if (fs.existsSync(toolsFile)) {
+    let toolsRaw = fs.readFileSync(toolsFile, 'utf8');
+    if (process.env.MCP_TOKEN) {
+        toolsRaw = toolsRaw.replace(/\{mcpToken\}/g, process.env.MCP_TOKEN);
+    }
+    if (process.env.MCP_URL) {
+        toolsRaw = toolsRaw.replace(/\{mcpUrl\}/g, process.env.MCP_URL);
+    }
+    const toolsJson = JSON.parse(toolsRaw);
+    if (Array.isArray(toolsJson.tools)) {
+        openai.promptConfig.tools = toolsJson.tools;
+    }
+}
 
 const discord = await createDiscord({
     log,
@@ -34,6 +52,8 @@ const discord = await createDiscord({
     }
 });
 registerSignals({ shutdownHook: () => discord.destroy() });
+
+discord.helpers = helpers;
 
 const port = parseInt(process.env.MCP_PORT || '1234', 10);
 const token = process.env.MCP_TOKEN;

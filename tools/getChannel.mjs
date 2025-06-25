@@ -1,5 +1,5 @@
 import { z, buildResponse } from '@purinton/mcp-server';
-import { PermissionsBitField } from 'discord.js';
+import { PermissionsBitField } from 'discord.helpers.js';
 
 export default async function ({ mcpServer, toolName, log, discord }) {
   mcpServer.tool(
@@ -9,8 +9,8 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, channelId } = _args;
-      const guild = await discord.guilds.fetch(guildId);
-      const channel = await discord.channels.fetch(channelId);
+      const guild = await discord.helpers.guilds.fetch(guildId);
+      const channel = await discord.helpers.channels.fetch(channelId);
       const base = {
         id: channel.id,
         guildId: channel.guildId,

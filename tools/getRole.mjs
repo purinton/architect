@@ -10,8 +10,8 @@ export default async function ({ mcpServer, toolName, log, discord }) {
       const args = _args;
       const guildId = args.guildId;
       const roleId = args.roleId;
-      const guild = await discord.guilds.fetch(guildId);
-      const role = await discord.roles.fetch(roleId);
+      const guild = await discord.helpers.guilds.fetch(guildId);
+      const role = await discord.helpers.roles.fetch(roleId);
       const permissions = role.permissions?.toArray?.() || [];
       const permissionsBitfield = role.permissions?.bitfield || null;
       const members = await guild.members.fetch();

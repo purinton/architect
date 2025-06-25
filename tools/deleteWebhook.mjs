@@ -15,8 +15,8 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, channelId, webhookId, reason } = _args;
-      const guild = await discord.getGuild(guildId);
-      const channel = await discord.getChannel(guild, channelId);
+      const guild = await discord.helpers.getGuild(guildId);
+      const channel = await discord.helpers.getChannel(guild, channelId);
       const webhook = channel.webhooks.cache.get(webhookId);
       if (!webhook) throw new Error('Webhook not found');
       try {

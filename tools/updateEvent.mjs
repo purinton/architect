@@ -24,7 +24,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
       const { guildId, eventId, ...updateFields } = _args;
       let event;
       try {
-        event = await discord.guilds.cache.get(guildId).scheduledEvents.fetch(eventId);
+        event = await discord.helpers.guilds.cache.get(guildId).scheduledEvents.fetch(eventId);
         await event.edit(updateFields);
       } catch (err) {
         throw new Error('Failed to update event: ' + (err.message || err));

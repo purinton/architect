@@ -15,13 +15,13 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, channelId, messageIds, emojis } = _args;
-      const guild = await discord.getGuild(guildId);
-      const channel = await discord.getChannel(guild, channelId);
+      const guild = await discord.helpers.getGuild(guildId);
+      const channel = await discord.helpers.getChannel(guild, channelId);
       const results = [];
       for (const messageId of messageIds) {
         let message;
         try {
-          message = await discord.getMessage(channel, messageId);
+          message = await discord.helpers.getMessage(channel, messageId);
         } catch (err) {
           results.push({ messageId, success: false, error: 'Failed to fetch message: ' + (err.message || err) });
           continue;

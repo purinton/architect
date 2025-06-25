@@ -21,9 +21,9 @@ export default async function ({ mcpServer, toolName, log, discord }) {
       if (embedOnly !== undefined) filterArgs.embedOnly = embedOnly;
       if (_args.userId && _args.userId !== "") filterArgs.userId = _args.userId;
       if (_args.contains && _args.contains !== "") filterArgs.contains = _args.contains;
-      const guild = await discord.getGuild(guildId);
-      const channel = await discord.getChannel(guild, channelId);
-      let filtered = await discord.fetchAndFilterMessages(channel, filterArgs);
+      const guild = await discord.helpers.getGuild(guildId);
+      const channel = await discord.helpers.getChannel(guild, channelId);
+      let filtered = await discord.helpers.fetchAndFilterMessages(channel, filterArgs);
       log.debug('[bulkDeleteMessages] Filtered messages:', filtered.map(m => ({ id: m.id, author: m.author?.id, created: m.createdTimestamp })));
       const now = Date.now();
       const maxAge = 14 * 24 * 60 * 60 * 1000;

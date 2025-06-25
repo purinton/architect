@@ -16,8 +16,8 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, channelId, name, autoArchiveDuration, reason } = _args;
-      const guild = await discord.getGuild(guildId);
-      const channel = await discord.getChannel(guild, channelId);
+      const guild = await discord.helpers.getGuild(guildId);
+      const channel = await discord.helpers.getChannel(guild, channelId);
       if (typeof channel.threads?.create !== 'function') throw new Error('Channel cannot create threads.');
       let thread;
       try {

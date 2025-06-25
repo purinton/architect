@@ -1,11 +1,11 @@
 import { z, buildResponse } from '@purinton/mcp-server';
 
 // Tool: update-guild-settings
-// Allows updating all possible guild-wide settings via Discord.js Guild.edit()
+// Allows updating all possible guild-wide settings via discord.helpers.js Guild.edit()
 export default async function ({ mcpServer, toolName, log, discord }) {
   mcpServer.tool(
     toolName,
-    'Modify any guild-wide settings supported by Discord.js Guild.edit().',
+    'Modify any guild-wide settings supported by discord.helpers.js Guild.edit().',
     {
       afkChannelId: z.string().optional(),
       afkTimeout: z.number().optional(),
@@ -32,7 +32,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, ...updateFields } = _args;
-      const guild = await discord.guilds.fetch(guildId);
+      const guild = await discord.helpers.guilds.fetch(guildId);
       if (Array.isArray(updateFields.systemChannelFlags)) {
         updateFields.systemChannelFlags = updateFields.systemChannelFlags.reduce((acc, flag) => {
           if (Guild.SystemChannelFlagsBits && Guild.SystemChannelFlagsBits[flag]) return acc | Guild.SystemChannelFlagsBits[flag];

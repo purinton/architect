@@ -31,10 +31,10 @@ export default async function ({ mcpServer, toolName, log, discord }) {
       const textTypes = [0, 5, 15, 13]; // GUILD_TEXT, ANNOUNCEMENT, FORUM, STAGE
       const voiceTypes = [2]; // GUILD_VOICE
       const { guildId, channelId, ...updateFields } = _args;
-      const guild = discord.getGuild(guildId);
-      const channel = await discord.getChannel(guild, channelId);
+      const guild = discord.helpers.getGuild(guildId);
+      const channel = await discord.helpers.getChannel(guild, channelId);
       if (Array.isArray(updateFields.permissionOverwrites)) {
-        updateFields.permissionOverwrites = discord.mergePermissionOverwrites(
+        updateFields.permissionOverwrites = discord.helpers.mergePermissionOverwrites(
           channel.permissionOverwrites,
           updateFields.permissionOverwrites
         );
@@ -57,7 +57,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
       if (updateFields.locked !== undefined && channel.type !== 11 && channel.type !== 12) {
         delete updateFields.locked;
       }
-      const cleaned = discord.cleanOptions(updateFields);
+      const cleaned = discord.helpers.cleanOptions(updateFields);
       let response;
       try {
         response = await channel.edit(cleaned);

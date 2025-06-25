@@ -15,9 +15,9 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, channelId, threadId, reason } = _args;
-      const guild = await discord.getGuild(guildId);
-      const channel = await discord.getChannel(guild, channelId);
-      const thread = await discord.getThread(channel, threadId);
+      const guild = await discord.helpers.getGuild(guildId);
+      const channel = await discord.helpers.getChannel(guild, channelId);
+      const thread = await discord.helpers.getThread(channel, threadId);
       try {
         await thread.setArchived(true, reason);
       } catch (err) {

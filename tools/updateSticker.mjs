@@ -19,7 +19,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
       const { guildId, stickerId, ...updateFields } = _args;
       let sticker;
       try {
-        sticker = await discord.guilds.cache.get(guildId).stickers.fetch(stickerId);
+        sticker = await discord.helpers.guilds.cache.get(guildId).stickers.fetch(stickerId);
         await sticker.edit(updateFields);
       } catch (err) {
         throw new Error('Failed to update sticker: ' + (err.message || err));

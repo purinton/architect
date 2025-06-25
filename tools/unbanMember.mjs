@@ -15,7 +15,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, userId, reason } = _args;
       try {
-        await discord.guilds.unban(guildId, userId, reason);
+        await discord.helpers.guilds.unban(guildId, userId, reason);
       } catch (err) {
         throw new Error('Failed to unban user: ' + (err.message || err));
       }

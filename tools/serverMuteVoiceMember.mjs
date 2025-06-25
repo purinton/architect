@@ -16,7 +16,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
       const { guildId, memberId, mute, reason } = _args;
       log.debug(`${toolName} Request`, { _args });
       try {
-        const guild = await discord.guilds.fetch(guildId);
+        const guild = await discord.helpers.guilds.fetch(guildId);
         const member = await guild.members.fetch(memberId);
         await member.voice.setMute(mute, reason);
       } catch (err) {

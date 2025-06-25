@@ -15,7 +15,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, memberId, roleIds, reason } = _args;
-      const guild = await discord.guilds.fetch(guildId);
+      const guild = await discord.helpers.guilds.fetch(guildId);
       const member = await guild.members.fetch(memberId);
       const validRoleIds = roleIds.filter(roleId => guild.roles.cache.has(roleId));
       try {

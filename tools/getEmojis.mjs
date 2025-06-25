@@ -12,7 +12,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (args, extra) => {
       log.debug(`${toolName} Request`, { args });
       const { guildId } = args;
-      const guild = discord.guilds.cache.get(guildId);
+      const guild = discord.helpers.guilds.cache.get(guildId);
       const emojis = guild.emojis.cache.map(e => ({
         id: e.id,
         name: e.name,

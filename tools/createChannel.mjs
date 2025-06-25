@@ -25,18 +25,18 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, name, type, parentId, topic, nsfw, position, rateLimitPerUser, permissionOverwrites } = _args;
-      const guild = await discord.getGuild(guildId);
+      const guild = await discord.helpers.getGuild(guildId);
       let processedPermissionOverwrites = permissionOverwrites;
       if (Array.isArray(permissionOverwrites)) {
         processedPermissionOverwrites = permissionOverwrites.map(o => ({
           ...o,
-          allow: o.allow ? o.allow.map(discord.toPascalCasePerms) : undefined,
-          deny: o.deny ? o.deny.map(discord.toPascalCasePerms) : undefined,
+          allow: o.allow ? o.allow.map(discord.helpers.toPascalCasePerms) : undefined,
+          deny: o.deny ? o.deny.map(discord.helpers.toPascalCasePerms) : undefined,
         }));
       }
       let discordType = 0;
       if (type === 'category') discordType = 4;
-      const options = discord.cleanOptions({
+      const options = discord.helpers.cleanOptions({
         parent: parentId,
         topic,
         nsfw,

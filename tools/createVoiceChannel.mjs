@@ -24,16 +24,16 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, name, parentId, bitrate, userLimit, rtcRegion, position, permissionOverwrites } = _args;
-      const guild = await discord.getGuild(guildId);
+      const guild = await discord.helpers.getGuild(guildId);
       let processedPermissionOverwrites = permissionOverwrites;
       if (Array.isArray(permissionOverwrites)) {
         processedPermissionOverwrites = permissionOverwrites.map(o => ({
           ...o,
-          allow: o.allow ? o.allow.map(discord.toPascalCasePerms) : undefined,
-          deny: o.deny ? o.deny.map(discord.toPascalCasePerms) : undefined,
+          allow: o.allow ? o.allow.map(discord.helpers.toPascalCasePerms) : undefined,
+          deny: o.deny ? o.deny.map(discord.helpers.toPascalCasePerms) : undefined,
         }));
       }
-      const options = discord.cleanOptions({
+      const options = discord.helpers.cleanOptions({
         type: 2, // 2 = GUILD_VOICE
         name,
         parent: parentId,

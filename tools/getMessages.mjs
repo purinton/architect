@@ -16,8 +16,8 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, channelId, limit = 100, before, after } = _args;
-      const guild = discord.guilds.cache.get(guildId);
-      const channel = await discord.channels.fetch(channelId).catch(() => null);
+      const guild = discord.helpers.guilds.cache.get(guildId);
+      const channel = await discord.helpers.channels.fetch(channelId).catch(() => null);
       if (!channel || typeof channel.messages?.fetch !== 'function') throw new Error('Channel cannot fetch messages.');
       const beforeId = before && before !== '' ? before : undefined;
       const afterId = after && after !== '' ? after : undefined;

@@ -14,7 +14,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
       const { guildId } = _args;
       let invites;
       try {
-        invites = await discord.guilds.cache.get(guildId).invites.fetch();
+        invites = await discord.helpers.guilds.cache.get(guildId).invites.fetch();
       } catch (err) {
         throw new Error('Failed to fetch invites: ' + (err.message || err));
       }

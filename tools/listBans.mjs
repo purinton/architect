@@ -14,7 +14,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
       const { guildId } = args;
       let bans;
       try {
-        bans = await discord.guilds.cache.get(guildId).bans.fetch();
+        bans = await discord.helpers.guilds.cache.get(guildId).bans.fetch();
       } catch (err) {
         throw new Error('Failed to fetch bans: ' + (err.message || err));
       }

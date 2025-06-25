@@ -1,58 +1,5 @@
-import 'dotenv/config';
-import fs from 'fs';
-import log from '../log.mjs';
-import { OpenAI } from 'openai';
-import { getCurrentDirname } from '../esm-filename.mjs';
-import { getKey, setKey } from './redis.mjs';
-import path from 'path';
+
 import https from 'https';
-
-let logger = log;
-export function _setLogger(l) {
-    logger = l;
-}
-
-
-const dirname = getCurrentDirname(import.meta);
-let baseConfigRaw = fs.readFileSync(`${dirname}/openai.json`, 'utf8');
-let baseConfig = JSON.parse(baseConfigRaw);
-
-// Load tools from tools.json if it exists
-const toolsPath = path.join(dirname, '../..', 'tools.json');
-if (fs.existsSync(toolsPath)) {
-    try {
-        let toolsRaw = fs.readFileSync(toolsPath, 'utf8');
-        if (process.env.MCP_TOKEN) {
-            toolsRaw = toolsRaw.replace(/\{mcpToken\}/g, process.env.MCP_TOKEN);
-        }
-        if (process.env.MCP_URL) {
-            toolsRaw = toolsRaw.replace(/\{mcpUrl\}/g, process.env.MCP_URL);
-        }
-        const toolsJson = JSON.parse(toolsRaw);
-        if (Array.isArray(toolsJson.tools)) {
-            baseConfig.tools = toolsJson.tools;
-        } else {
-            logger.warn('tools.json exists but does not contain a valid tools array.');
-        }
-    } catch (err) {
-        logger.warn('Failed to read or parse tools.json:', err);
-    }
-} else {
-    logger.warn('tools.json not found, skipping tools config.');
-}
-
-if (!process.env.OPENAI_API_KEY) {
-    logger.error('OpenAI API key is not set. Please set the OPENAI_API_KEY environment variable.');
-    process.exit(1);
-}
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-export function _setOpenAIClient(client) {
-    global._openai_test_client = client;
-}
-
-const getOpenAIClient = () => global._openai_test_client || openai;
 
 // Helper to download image if not cached
 async function downloadImageToTmp(url, filename) {

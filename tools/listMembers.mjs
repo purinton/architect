@@ -8,7 +8,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, limit = 1000 } = _args;
-      const guild = discord.guilds.cache.get(guildId);
+      const guild = discord.helpers.guilds.cache.get(guildId);
       let members;
       try {
         members = await guild.members.fetch({ limit });

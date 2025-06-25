@@ -18,10 +18,10 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, ...eventData } = _args;
-      const guild = await discord.getGuild(guildId);
+      const guild = await discord.helpers.getGuild(guildId);
       let event;
       try {
-        event = await guild.scheduledEvents.create(discord.cleanOptions(eventData));
+        event = await guild.scheduledEvents.create(discord.helpers.cleanOptions(eventData));
       } catch (err) {
         throw new Error('Failed to create event: ' + (err.message || err));
       }

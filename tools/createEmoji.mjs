@@ -14,7 +14,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, name, image, roles, reason } = _args;
-      const guild = await discord.getGuild(guildId);
+      const guild = await discord.helpers.getGuild(guildId);
       let emoji;
       try {
         emoji = await guild.emojis.create({ name, attachment: image, roles, reason });

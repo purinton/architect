@@ -17,10 +17,10 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, ...stickerData } = _args;
-      const guild = await discord.getGuild(guildId);
+      const guild = await discord.helpers.getGuild(guildId);
       let sticker;
       try {
-        sticker = await guild.stickers.create(discord.cleanOptions(stickerData));
+        sticker = await guild.stickers.create(discord.helpers.cleanOptions(stickerData));
       } catch (err) {
         throw new Error('Failed to create sticker: ' + (err.message || err));
       }

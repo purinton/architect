@@ -16,12 +16,12 @@ export default async function ({ mcpServer, toolName, log, discord }) {
       let webhooks = [];
       try {
         if (channelId) {
-          const channel = await discord.getChannel(channelId);
+          const channel = await discord.helpers.getChannel(channelId);
           if (typeof channel.fetchWebhooks !== 'function') throw new Error('Channel cannot fetch webhooks.');
           const fetched = await channel.fetchWebhooks();
           webhooks = Array.from(fetched.values());
         } else {
-          const guild = await discord.getGuild(guildId);
+          const guild = await discord.helpers.getGuild(guildId);
           const fetched = await guild.fetchWebhooks();
           webhooks = Array.from(fetched.values());
         }
