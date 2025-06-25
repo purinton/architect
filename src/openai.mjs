@@ -48,7 +48,7 @@ async function downloadImageToTmp(url, filename) {
     });
 }
 
-export async function getReply(db, openai, appId, guild, channel, messages) {
+export async function getReply(log, db, openai, appId, guild, channel, messages) {
     log.debug('getReply called with:', { appId, guild_id: guild.id, channel_id: channel.id, messages_count: messages.size });
     const config = JSON.parse(JSON.stringify(openai.promptConfig));
     if (!config.input || !config.input.length) {

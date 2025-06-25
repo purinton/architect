@@ -58,7 +58,7 @@ export default async function ({ client, log, msg, db, openai }, message) {
                 typingInterval = null;
             }, 180000); // 3 minutes
             const messages = await message.channel.messages.fetch({ limit: 100 });
-            const replyObj = await openai.getReply(db, openai, client.user.id, message.guild, message.channel, messages);
+            const replyObj = await openai.getReply(log, db, openai, client.user.id, message.guild, message.channel, messages);
             if (typingInterval) clearInterval(typingInterval);
             if (typingTimeout) clearTimeout(typingTimeout);
             if (!replyObj || !replyObj.text) {
