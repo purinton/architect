@@ -1,5 +1,5 @@
 import { z, buildResponse } from '@purinton/mcp-server';
-import { PermissionsBitField } from 'discord.helpers.js';
+import { PermissionsBitField } from 'discord.js';
 
 export default async function ({ mcpServer, toolName, log, discord }) {
   mcpServer.tool(
