@@ -11,4 +11,5 @@ export default async function ({ log, presence }, client) {
             log.error(`Failed to fetch members for guild: ${guild.name}`, err);
         }
     }
+    log.info(`Ready in ${client.guilds.cache.size} guilds with ${client.users.cache.size} users.`);
 }
