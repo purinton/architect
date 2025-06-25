@@ -114,7 +114,16 @@ export default async function ({ mcpServer, toolName, log, discord }) {
         return buildResponse({ updated: true, settings: cleanSettings });
       } else if (method === 'audit') {
         log.debug(`[${toolName}] Fetching audit logs`, { guildId, auditSettings });
-        const options = auditSettings || {};
+        // Clean auditSettings: remove empty string, null, or undefined values
+        const options = Object.fromEntries(
+          Object.entries(auditSettings || {}).filter(
+            ([key, value]) =>
+              value !== undefined &&
+              value !== null &&
+              !(typeof value === 'string' && value.trim() === '')
+          )
+        );
+        log.debug(`[${toolName}] Cleaned audit log options`, { options });
         const logs = await guild.fetchAuditLogs(options);
         log.debug(`[${toolName}] Audit logs fetched`, { count: logs.entries.size });
         return buildResponse({ entries: logs.entries.map(e => e.toJSON()) });
