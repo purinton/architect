@@ -1,6 +1,5 @@
 import https from 'https';
 
-// Get the response_id for a given appId, guildId, channelId
 async function getKey(db, appId, guildId, channelId) {
     const [rows] = await db.execute(
         'SELECT response_id FROM channels WHERE app_id = ? AND guild_id = ? AND channel_id = ? LIMIT 1',
@@ -12,7 +11,6 @@ async function getKey(db, appId, guildId, channelId) {
     return null;
 }
 
-// Set or update the response_id for a given appId, guildId, channelId
 async function setKey(db, appId, guildId, channelId, responseId) {
     await db.execute(
         `REPLACE INTO channels (app_id, guild_id, channel_id, response_id) VALUES (?, ?, ?, ?)`,
@@ -20,7 +18,6 @@ async function setKey(db, appId, guildId, channelId, responseId) {
     );
 }
 
-// Helper to download image if not cached
 async function downloadImageToTmp(url, filename) {
     const cacheDir = path.join('/tmp', 'architect.cache');
     if (!fs.existsSync(cacheDir)) {
