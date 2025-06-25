@@ -77,8 +77,8 @@ export async function getReply(log, db, openai, appId, guild, channel, messages)
 
     const historyMessages = [];
     for (const message of messages.values()) {
-        if (!newConversation && message.author.id === myUserId) break;
-        if (newConversation && message.author.id === myUserId) {
+        if (!newConversation && message.author.id === appId) break;
+        if (newConversation && message.author.id === appId) {
             historyMessages.push({
                 role: 'assistant',
                 content: [{ type: 'output_text', text: message.content }]
