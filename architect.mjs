@@ -20,7 +20,7 @@ const db = await createDb({ log });
 registerSignals({ shutdownHook: () => db.end() });
 
 const openai = await createOpenAI();
-openai.promptConfig = JSON.parse(fs.readFileSync(path(import.meta, 'prompt.json')), 'utf8');
+openai.promptConfig = JSON.parse(fs.readFileSync(path(import.meta, 'openai.json')), 'utf8');
 openai.getReply = getReply;
 
 const toolsFile = path(import.meta, 'tools.json');
