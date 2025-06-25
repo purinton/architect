@@ -41,11 +41,17 @@ export default async function ({ mcpServer, toolName, log, discord }) {
       auditSettings: auditSettingsSchema.nullable().optional(),
     },
     async (_args, _extra) => {
-      log.debug(`${toolName} Request`, { _args });
+      log.debug(`[${toolName}] Request`, { _args });
       const { guildId, method, updateSettings, auditSettings } = _args;
+      log.debug(`[${toolName}] Fetching guild from cache`, { guildId });
       const guild = discord.guilds.cache.get(guildId);
-      if (!guild) throw new Error('Guild not found.');
+      if (!guild) {
+        log.error(`[${toolName}] Guild not found.`, { guildId });
+        throw new Error('Guild not found.');
+      }
+      log.debug(`[${toolName}] Guild found`, { guildId, method });
       if (method === 'get') {
+        log.debug(`[${toolName}] Getting guild settings`, { guildId });
         // Return current settings
         const settings = {
           id: guild.id,
@@ -70,10 +76,16 @@ export default async function ({ mcpServer, toolName, log, discord }) {
           verificationLevel: guild.verificationLevel,
         };
         const cleanSettings = Object.fromEntries(Object.entries(settings).filter(([_, v]) => v !== undefined && v !== null));
+        log.debug(`[${toolName}] Returning guild settings`, { cleanSettings });
         return buildResponse(cleanSettings);
       } else if (method === 'update') {
-        if (!updateSettings) throw new Error('updateSettings required for update method.');
+        log.debug(`[${toolName}] Updating guild settings`, { guildId, updateSettings });
+        if (!updateSettings) {
+          log.error(`[${toolName}] updateSettings required for update method.`, { guildId });
+          throw new Error('updateSettings required for update method.');
+        }
         await guild.edit(updateSettings);
+        log.debug(`[${toolName}] Guild updated`, { guildId, updateSettings });
         // Return only serializable settings after update
         const settings = {
           id: guild.id,
@@ -98,12 +110,16 @@ export default async function ({ mcpServer, toolName, log, discord }) {
           verificationLevel: guild.verificationLevel,
         };
         const cleanSettings = Object.fromEntries(Object.entries(settings).filter(([_, v]) => v !== undefined && v !== null));
+        log.debug(`[${toolName}] Returning updated guild settings`, { cleanSettings });
         return buildResponse({ updated: true, settings: cleanSettings });
       } else if (method === 'audit') {
+        log.debug(`[${toolName}] Fetching audit logs`, { guildId, auditSettings });
         const options = auditSettings || {};
         const logs = await guild.fetchAuditLogs(options);
+        log.debug(`[${toolName}] Audit logs fetched`, { count: logs.entries.size });
         return buildResponse({ entries: logs.entries.map(e => e.toJSON()) });
       } else {
+        log.error(`[${toolName}] Invalid method.`, { method });
         throw new Error('Invalid method.');
       }
     }
