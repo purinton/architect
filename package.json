@@ -1,7 +1,7 @@
 {
     "name": "@purinton/architect",
     "type": "module",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "AI-powered Discord server automation and administration. Integrates Model Context Protocol (MCP) and OpenAI for natural language server management, built on the purinton/discord foundation.",
     "main": "architect.mjs",
     "scripts": {
