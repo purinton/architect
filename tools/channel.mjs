@@ -43,11 +43,13 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`[${toolName}] Request`, { _args });
       const { guildId, channelId, method, channelSettings } = _args;
-      const channelIds = Array.isArray(channelId) ? channelId : channelId ? [channelId] : [];
+      // For create, ignore channelId entirely
+      const channelIds = method === 'create' ? [] : Array.isArray(channelId) ? channelId.filter(Boolean) : channelId ? [channelId].filter(Boolean) : [];
       let settingsArr = Array.isArray(channelSettings) ? channelSettings : channelSettings ? [channelSettings] : [];
       if (method === 'create') {
         // Filter out invalid settings (missing name or type)
         settingsArr = settingsArr.filter(s => s && typeof s.name === 'string' && s.name.trim() && typeof s.type === 'number');
+        log.debug(`[${toolName}] Final settingsArr for create`, { settingsArr });
         if (!guildId || !settingsArr.length) {
           log.error(`[${toolName}] guildId and valid channelSettings (with name and type) required for create.`);
           throw new Error('guildId and valid channelSettings (with name and type) required for create.');
