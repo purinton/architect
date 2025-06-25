@@ -1,9 +1,23 @@
 import { z, buildResponse } from '@purinton/mcp-server';
 
+// Define a stricter schema for embeds and files to be OpenAI-compatible
+const embedSchema = z.object({
+  title: z.string().optional(),
+  description: z.string().optional(),
+  url: z.string().optional(),
+  color: z.number().optional(),
+  // Add more fields as needed for your use case
+});
+const fileSchema = z.object({
+  name: z.string(),
+  url: z.string().optional(),
+  // Add more fields as needed for your use case
+});
+
 const messageSettingsSchema = z.object({
   content: z.string().optional(),
-  embeds: z.array(z.any()).optional(),
-  files: z.array(z.any()).optional(),
+  embeds: z.array(embedSchema).optional(),
+  files: z.array(fileSchema).optional(),
   tts: z.boolean().optional(),
   reason: z.string().optional(),
 });
@@ -17,7 +31,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
       method: z.enum(['send', 'get', 'bulkDelete', 'react']),
       messageId: z.string().optional(),
       messageIds: z.array(z.string()).optional(),
-      messageSettings: messageSettingsSchema.nullable().optional(),
+      messageSettings: messageSettingsSchema.optional(),
       emoji: z.string().optional(),
       limit: z.number().optional(),
     },
