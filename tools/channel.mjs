@@ -62,7 +62,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
         const results = [];
         for (const settings of settingsArr) {
           const cleaned = cleanSettingsForType(settings, settings.type);
-          const created = await guild.channels.create(cleaned.name, cleaned);
+          const created = await guild.channels.create({ ...cleaned });
           log.debug(`[${toolName}] Channel created`, { id: created.id });
           results.push({ created: true, id: created.id, name: created.name });
         }
