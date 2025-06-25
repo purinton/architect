@@ -51,7 +51,7 @@ const authCallback = (bearerToken) => {
 };
 
 try {
-    const context = { db, discord, openai };
+    const context = { discord };
     const { httpInstance, transport } = await mcpServer({
         name, version, port, token, toolsDir, log, authCallback, context
     });
