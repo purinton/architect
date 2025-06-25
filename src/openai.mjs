@@ -49,10 +49,10 @@ async function downloadImageToTmp(url, filename) {
 }
 
 export async function getReply(db, openai, appId, guild, channel, messages) {
-    logger.debug('getReply called with:', { appId, guild_id: guild.id, channel_id: channel.id, messages_count: messages.size });
+    log.debug('getReply called with:', { appId, guild_id: guild.id, channel_id: channel.id, messages_count: messages.size });
     const config = JSON.parse(JSON.stringify(openai.promptConfig));
     if (!config.input || !config.input.length) {
-        logger.error('OpenAI configuration does not contain any messages.');
+        log.error('OpenAI configuration does not contain any messages.');
         return { text: "An error occurred while processing your request. Please try again later.", images: [] };
     }
 
@@ -127,12 +127,12 @@ export async function getReply(db, openai, appId, guild, channel, messages) {
                     });
                     foundImage = true;
                 } catch (err) {
-                    logger.error('Failed to download or encode image', err);
+                    log.error('Failed to download or encode image', err);
                 }
             }
         }
         if (!foundImage && attachmentsIterable && Array.from(attachmentsIterable).length > 0) {
-            logger.warn('No valid image attachments found in attachmentsIterable.');
+            log.warn('No valid image attachments found in attachmentsIterable.');
         }
         historyMessages.push({
             role: 'user',
@@ -147,11 +147,11 @@ export async function getReply(db, openai, appId, guild, channel, messages) {
 
     let response;
     try {
-        logger.debug('OpenAI API Call', config);
+        log.debug('OpenAI API Call', config);
         response = await openai.responses.create(config);
-        logger.debug('OpenAI API Response', response);
+        log.debug('OpenAI API Response', response);
     } catch (error) {
-        logger.error('Error calling OpenAI API:', error);
+        log.error('Error calling OpenAI API:', error);
         return { text: "An error occurred while processing your request. Please try again later.", images: [] };
     }
 
@@ -172,7 +172,7 @@ export async function getReply(db, openai, appId, guild, channel, messages) {
                         size: item.size || undefined
                     });
                 } catch (e) {
-                    logger.error('Failed to decode OpenAI image result', e);
+                    log.error('Failed to decode OpenAI image result', e);
                 }
             }
         }
@@ -190,7 +190,7 @@ export async function getReply(db, openai, appId, guild, channel, messages) {
         }
     }
     if (!reply) {
-        logger.error('Malformed or empty response from OpenAI API.', { response });
+        log.error('Malformed or empty response from OpenAI API.', { response });
         reply = "An error occurred while processing your request. Please try again later.";
     }
 
