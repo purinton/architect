@@ -1,8 +1,8 @@
 import { z, buildResponse } from '@purinton/mcp-server';
 
 const channelSettingsSchema = z.object({
-  name: z.string().optional(),
-  type: z.number().optional(), // Discord.js channel type
+  name: z.string(),
+  type: z.number(), // Discord.js channel type
   topic: z.string().optional(),
   nsfw: z.boolean().optional(),
   bitrate: z.number().optional(),
@@ -12,6 +12,23 @@ const channelSettingsSchema = z.object({
   rateLimitPerUser: z.number().optional(),
   permissionOverwrites: z.any().optional(),
 });
+
+// Channel type constants (Discord.js v14)
+const VOICE_TYPES = [2, 13]; // 2: GUILD_VOICE, 13: GUILD_STAGE_VOICE
+const VOICE_ONLY_SETTINGS = ['bitrate', 'userLimit'];
+const NON_VOICE_ONLY_SETTINGS = ['topic', 'nsfw', 'rateLimitPerUser'];
+
+function cleanSettingsForType(settings, type) {
+  const cleaned = { ...settings };
+  if (VOICE_TYPES.includes(type)) {
+    // Remove non-voice-only settings
+    for (const key of NON_VOICE_ONLY_SETTINGS) delete cleaned[key];
+  } else {
+    // Remove voice-only settings
+    for (const key of VOICE_ONLY_SETTINGS) delete cleaned[key];
+  }
+  return cleaned;
+}
 
 export default async function ({ mcpServer, toolName, log, discord }) {
   mcpServer.tool(
@@ -27,11 +44,13 @@ export default async function ({ mcpServer, toolName, log, discord }) {
       log.debug(`[${toolName}] Request`, { _args });
       const { guildId, channelId, method, channelSettings } = _args;
       const channelIds = Array.isArray(channelId) ? channelId : channelId ? [channelId] : [];
-      const settingsArr = Array.isArray(channelSettings) ? channelSettings : channelSettings ? [channelSettings] : [];
+      let settingsArr = Array.isArray(channelSettings) ? channelSettings : channelSettings ? [channelSettings] : [];
       if (method === 'create') {
+        // Filter out invalid settings (missing name or type)
+        settingsArr = settingsArr.filter(s => s && typeof s.name === 'string' && s.name.trim() && typeof s.type === 'number');
         if (!guildId || !settingsArr.length) {
-          log.error(`[${toolName}] guildId and channelSettings required for create.`);
-          throw new Error('guildId and channelSettings required for create.');
+          log.error(`[${toolName}] guildId and valid channelSettings (with name and type) required for create.`);
+          throw new Error('guildId and valid channelSettings (with name and type) required for create.');
         }
         const guild = discord.guilds.cache.get(guildId);
         if (!guild) {
@@ -40,8 +59,8 @@ export default async function ({ mcpServer, toolName, log, discord }) {
         }
         const results = [];
         for (const settings of settingsArr) {
-          if (!settings.name) continue;
-          const created = await guild.channels.create(settings.name, settings);
+          const cleaned = cleanSettingsForType(settings, settings.type);
+          const created = await guild.channels.create(cleaned.name, cleaned);
           log.debug(`[${toolName}] Channel created`, { id: created.id });
           results.push({ created: true, id: created.id, name: created.name });
         }
@@ -96,7 +115,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
             results.push({ error: 'Channel not found', id: cid });
             continue;
           }
-          const cleanedSettings = Object.fromEntries(Object.entries(settings).filter(([_, v]) => v !== undefined && v !== null));
+          const cleanedSettings = cleanSettingsForType(settings, channel.type);
           await channel.edit(cleanedSettings);
           log.debug(`[${toolName}] Channel updated`, { id: channel.id });
           results.push({ updated: true, id: channel.id });
