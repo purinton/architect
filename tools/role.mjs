@@ -1,0 +1,121 @@
+import { z, buildResponse } from '@purinton/mcp-server';
+
+const roleSettingsSchema = z.object({
+  name: z.string().optional(),
+  color: z.union([z.string(), z.number()]).optional(),
+  hoist: z.boolean().optional(),
+  position: z.number().optional(),
+  permissions: z.any().optional(),
+  mentionable: z.boolean().optional(),
+});
+
+export default async function ({ mcpServer, toolName, log, discord }) {
+  mcpServer.tool(
+    toolName,
+    'Create, list, get, update, or delete one or more roles by ID.',
+    {
+      guildId: z.string().optional(),
+      roleId: z.union([z.string(), z.array(z.string())]).optional(),
+      method: z.enum(['create', 'list', 'get', 'update', 'delete']),
+      roleSettings: z.union([roleSettingsSchema, z.array(roleSettingsSchema)]).nullable().optional(),
+    },
+    async (_args, _extra) => {
+      log.debug(`[${toolName}] Request`, { _args });
+      const { guildId, roleId, method, roleSettings } = _args;
+      const roleIds = Array.isArray(roleId) ? roleId : roleId ? [roleId] : [];
+      const settingsArr = Array.isArray(roleSettings) ? roleSettings : roleSettings ? [roleSettings] : [];
+      if (method === 'create') {
+        if (!guildId || !settingsArr.length) {
+          log.error(`[${toolName}] guildId and roleSettings required for create.`);
+          throw new Error('guildId and roleSettings required for create.');
+        }
+        const guild = discord.guilds.cache.get(guildId);
+        if (!guild) {
+          log.error(`[${toolName}] Guild not found.`, { guildId });
+          throw new Error('Guild not found.');
+        }
+        const results = [];
+        for (const settings of settingsArr) {
+          if (!settings.name) continue;
+          const created = await guild.roles.create({ data: settings });
+          log.debug(`[${toolName}] Role created`, { id: created.id });
+          results.push({ created: true, id: created.id, name: created.name });
+        }
+        return buildResponse({ results });
+      } else if (method === 'list') {
+        if (!guildId) {
+          log.error(`[${toolName}] guildId required for list.`);
+          throw new Error('guildId required for list.');
+        }
+        const guild = discord.guilds.cache.get(guildId);
+        if (!guild) {
+          log.error(`[${toolName}] Guild not found.`, { guildId });
+          throw new Error('Guild not found.');
+        }
+        const roles = guild.roles.cache.map(r => ({ id: r.id, name: r.name, color: r.color, position: r.position }));
+        log.debug(`[${toolName}] Roles listed`, { count: roles.length });
+        return buildResponse({ roles });
+      } else if (method === 'get') {
+        if (!roleIds.length) {
+          log.error(`[${toolName}] roleId(s) required for get.`);
+          throw new Error('roleId(s) required for get.');
+        }
+        const results = roleIds.map(rid => {
+          const role = discord.roles?.cache?.get(rid) || discord.guilds.cache.map(g => g.roles.cache.get(rid)).find(Boolean);
+          if (!role) return { error: 'Role not found', id: rid };
+          log.debug(`[${toolName}] Role found`, { id: role.id });
+          return {
+            id: role.id,
+            name: role.name,
+            color: role.color,
+            hoist: role.hoist,
+            position: role.position,
+            permissions: role.permissions,
+            mentionable: role.mentionable,
+          };
+        });
+        return buildResponse({ results });
+      } else if (method === 'update') {
+        if (!roleIds.length || !settingsArr.length) {
+          log.error(`[${toolName}] roleId(s) and roleSettings required for update.`);
+          throw new Error('roleId(s) and roleSettings required for update.');
+        }
+        const results = [];
+        for (let i = 0; i < roleIds.length; i++) {
+          const rid = roleIds[i];
+          const settings = settingsArr[i] || settingsArr[0];
+          const role = discord.roles?.cache?.get(rid) || discord.guilds.cache.map(g => g.roles.cache.get(rid)).find(Boolean);
+          if (!role) {
+            results.push({ error: 'Role not found', id: rid });
+            continue;
+          }
+          const cleanedSettings = Object.fromEntries(Object.entries(settings).filter(([_, v]) => v !== undefined && v !== null));
+          await role.edit(cleanedSettings);
+          log.debug(`[${toolName}] Role updated`, { id: role.id });
+          results.push({ updated: true, id: role.id });
+        }
+        return buildResponse({ results });
+      } else if (method === 'delete') {
+        if (!roleIds.length) {
+          log.error(`[${toolName}] roleId(s) required for delete.`);
+          throw new Error('roleId(s) required for delete.');
+        }
+        const results = [];
+        for (const rid of roleIds) {
+          const role = discord.roles?.cache?.get(rid) || discord.guilds.cache.map(g => g.roles.cache.get(rid)).find(Boolean);
+          if (!role) {
+            results.push({ error: 'Role not found', id: rid });
+            continue;
+          }
+          await role.delete();
+          log.debug(`[${toolName}] Role deleted`, { id: rid });
+          results.push({ deleted: true, id: rid });
+        }
+        return buildResponse({ results });
+      } else {
+        log.error(`[${toolName}] Invalid method.`, { method });
+        throw new Error('Invalid method.');
+      }
+    }
+  );
+}
