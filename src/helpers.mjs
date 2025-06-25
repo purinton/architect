@@ -84,13 +84,6 @@ export function toPascalCasePerms(perm) {
     .join('');
 }
 
-export function wrapAction(action) {
-  return async (args) => {
-    const result = await action(args);
-    return buildResponse(result);
-  };
-}
-
 export function parseEmbed(embed) {
   if (!embed) return undefined;
   return embed;
