@@ -14,7 +14,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, stickerId, reason } = _args;
-      const guild = await discord.helpers.getGuild(guildId);
+      const guild = await discord.helpers.getGuild(discord, guildId);
       const sticker = guild.stickers.cache.get(stickerId);
       if (!sticker) throw new Error('Sticker not found');
       try {

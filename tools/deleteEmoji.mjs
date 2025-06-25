@@ -14,7 +14,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, emojiId, reason } = _args;
-      const guild = await discord.helpers.getGuild(guildId);
+      const guild = await discord.helpers.getGuild(discord, guildId);
       const emoji = guild.emojis.cache.get(emojiId);
       if (!emoji) throw new Error('Emoji not found');
       try {

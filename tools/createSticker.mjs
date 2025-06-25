@@ -17,7 +17,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, ...stickerData } = _args;
-      const guild = await discord.helpers.getGuild(guildId);
+      const guild = await discord.helpers.getGuild(discord, guildId);
       let sticker;
       try {
         sticker = await guild.stickers.create(discord.helpers.cleanOptions(stickerData));

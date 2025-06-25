@@ -18,7 +18,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, ...roleData } = _args;
-      const guild = await discord.helpers.getGuild(guildId);
+      const guild = await discord.helpers.getGuild(discord, guildId);
       if (Array.isArray(roleData.permissions)) {
         roleData.permissions = roleData.permissions.map(discord.helpers.toPascalCasePerms);
       }

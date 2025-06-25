@@ -25,7 +25,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, name, type, parentId, topic, nsfw, position, rateLimitPerUser, permissionOverwrites } = _args;
-      const guild = await discord.helpers.getGuild(guildId);
+      const guild = await discord.helpers.getGuild(discord, guildId);
       let processedPermissionOverwrites = permissionOverwrites;
       if (Array.isArray(permissionOverwrites)) {
         processedPermissionOverwrites = permissionOverwrites.map(o => ({

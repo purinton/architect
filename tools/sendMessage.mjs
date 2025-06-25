@@ -33,7 +33,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
         async (_args, _extra) => {
             log.debug(`${toolName} Request`, { _args });
             const { guildId, channelId, content, embed } = _args;
-            const guild = await discord.helpers.getGuild(guildId);
+            const guild = await discord.helpers.getGuild(discord, guildId);
             const channel = await discord.helpers.getChannel(guild, channelId);
             if (!content && !embed) throw new Error('Either content or embed must be provided.');
 

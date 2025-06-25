@@ -16,7 +16,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, channelId, maxAge, maxUses, temporary, unique, reason } = _args;
-      const guild = await discord.helpers.getGuild(guildId);
+      const guild = await discord.helpers.getGuild(discord, guildId);
       const channel = await discord.helpers.getChannel(guild, channelId);
       if (typeof channel.createInvite !== 'function') throw new Error('Channel cannot create invites for this channel.');
       let invite;

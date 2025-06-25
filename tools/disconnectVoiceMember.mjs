@@ -14,7 +14,7 @@ export default async function ({ mcpServer, toolName = 'discord-disconnect-voice
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, memberId, reason } = _args;
-      const guild = await discord.helpers.getGuild(guildId);
+      const guild = await discord.helpers.getGuild(discord, guildId);
       const member = await discord.helpers.getMember(guild, memberId);
       try {
         await member.voice.disconnect(reason);

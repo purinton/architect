@@ -31,7 +31,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
       const textTypes = [0, 5, 15, 13]; // GUILD_TEXT, ANNOUNCEMENT, FORUM, STAGE
       const voiceTypes = [2]; // GUILD_VOICE
       const { guildId, channelId, ...updateFields } = _args;
-      const guild = discord.helpers.getGuild(guildId);
+      const guild = discord.helpers.getGuild(discord, guildId);
       const channel = await discord.helpers.getChannel(guild, channelId);
       if (Array.isArray(updateFields.permissionOverwrites)) {
         updateFields.permissionOverwrites = discord.helpers.mergePermissionOverwrites(

@@ -21,7 +21,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
           const fetched = await channel.fetchWebhooks();
           webhooks = Array.from(fetched.values());
         } else {
-          const guild = await discord.helpers.getGuild(guildId);
+          const guild = await discord.helpers.getGuild(discord, guildId);
           const fetched = await guild.fetchWebhooks();
           webhooks = Array.from(fetched.values());
         }

@@ -18,7 +18,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       log.debug(`${toolName} Request`, { _args });
       const { guildId, ...eventData } = _args;
-      const guild = await discord.helpers.getGuild(guildId);
+      const guild = await discord.helpers.getGuild(discord, guildId);
       let event;
       try {
         event = await guild.scheduledEvents.create(discord.helpers.cleanOptions(eventData));
