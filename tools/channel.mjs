@@ -16,29 +16,36 @@ const channelSettingsSchema = z.object({
 export default async function ({ mcpServer, toolName, log, discord }) {
   mcpServer.tool(
     toolName,
-    'Create, list, get, update, or delete a channel by ID.',
+    'Create, list, get, update, or delete one or more channels by ID.',
     {
       guildId: z.string().optional(),
-      channelId: z.string().optional(),
+      channelId: z.union([z.string(), z.array(z.string())]).optional(),
       method: z.enum(['create', 'list', 'get', 'update', 'delete']),
-      channelSettings: channelSettingsSchema.nullable().optional(),
+      channelSettings: z.union([channelSettingsSchema, z.array(channelSettingsSchema)]).nullable().optional(),
     },
     async (_args, _extra) => {
       log.debug(`[${toolName}] Request`, { _args });
       const { guildId, channelId, method, channelSettings } = _args;
+      const channelIds = Array.isArray(channelId) ? channelId : channelId ? [channelId] : [];
+      const settingsArr = Array.isArray(channelSettings) ? channelSettings : channelSettings ? [channelSettings] : [];
       if (method === 'create') {
-        if (!guildId || !channelSettings || !channelSettings.name) {
-          log.error(`[${toolName}] guildId and channelSettings.name required for create.`);
-          throw new Error('guildId and channelSettings.name required for create.');
+        if (!guildId || !settingsArr.length) {
+          log.error(`[${toolName}] guildId and channelSettings required for create.`);
+          throw new Error('guildId and channelSettings required for create.');
         }
         const guild = discord.guilds.cache.get(guildId);
         if (!guild) {
           log.error(`[${toolName}] Guild not found.`, { guildId });
           throw new Error('Guild not found.');
         }
-        const created = await guild.channels.create(channelSettings.name, channelSettings);
-        log.debug(`[${toolName}] Channel created`, { id: created.id });
-        return buildResponse({ created: true, id: created.id, name: created.name });
+        const results = [];
+        for (const settings of settingsArr) {
+          if (!settings.name) continue;
+          const created = await guild.channels.create(settings.name, settings);
+          log.debug(`[${toolName}] Channel created`, { id: created.id });
+          results.push({ created: true, id: created.id, name: created.name });
+        }
+        return buildResponse({ results });
       } else if (method === 'list') {
         if (!guildId) {
           log.error(`[${toolName}] guildId required for list.`);
@@ -53,56 +60,65 @@ export default async function ({ mcpServer, toolName, log, discord }) {
         log.debug(`[${toolName}] Channels listed`, { count: channels.length });
         return buildResponse({ channels });
       } else if (method === 'get') {
-        if (!channelId) {
-          log.error(`[${toolName}] channelId required for get.`);
-          throw new Error('channelId required for get.');
+        if (!channelIds.length) {
+          log.error(`[${toolName}] channelId(s) required for get.`);
+          throw new Error('channelId(s) required for get.');
         }
-        const channel = discord.channels.cache.get(channelId);
-        if (!channel) {
-          log.error(`[${toolName}] Channel not found.`, { channelId });
-          throw new Error('Channel not found.');
-        }
-        log.debug(`[${toolName}] Channel found`, { id: channel.id });
-        return buildResponse({
-          id: channel.id,
-          name: channel.name,
-          type: channel.type,
-          topic: channel.topic,
-          nsfw: channel.nsfw,
-          bitrate: channel.bitrate,
-          userLimit: channel.userLimit,
-          parent: channel.parentId,
-          position: channel.position,
-          rateLimitPerUser: channel.rateLimitPerUser,
+        const results = channelIds.map(cid => {
+          const channel = discord.channels.cache.get(cid);
+          if (!channel) return { error: 'Channel not found', id: cid };
+          log.debug(`[${toolName}] Channel found`, { id: channel.id });
+          return {
+            id: channel.id,
+            name: channel.name,
+            type: channel.type,
+            topic: channel.topic,
+            nsfw: channel.nsfw,
+            bitrate: channel.bitrate,
+            userLimit: channel.userLimit,
+            parent: channel.parentId,
+            position: channel.position,
+            rateLimitPerUser: channel.rateLimitPerUser,
+          };
         });
+        return buildResponse({ results });
       } else if (method === 'update') {
-        if (!channelId || !channelSettings) {
-          log.error(`[${toolName}] channelId and channelSettings required for update.`);
-          throw new Error('channelId and channelSettings required for update.');
+        if (!channelIds.length || !settingsArr.length) {
+          log.error(`[${toolName}] channelId(s) and channelSettings required for update.`);
+          throw new Error('channelId(s) and channelSettings required for update.');
         }
-        const channel = discord.channels.cache.get(channelId);
-        if (!channel) {
-          log.error(`[${toolName}] Channel not found.`, { channelId });
-          throw new Error('Channel not found.');
+        const results = [];
+        for (let i = 0; i < channelIds.length; i++) {
+          const cid = channelIds[i];
+          const settings = settingsArr[i] || settingsArr[0];
+          const channel = discord.channels.cache.get(cid);
+          if (!channel) {
+            results.push({ error: 'Channel not found', id: cid });
+            continue;
+          }
+          const cleanedSettings = Object.fromEntries(Object.entries(settings).filter(([_, v]) => v !== undefined && v !== null));
+          await channel.edit(cleanedSettings);
+          log.debug(`[${toolName}] Channel updated`, { id: channel.id });
+          results.push({ updated: true, id: channel.id });
         }
-        // Clean channelSettings
-        const cleanedSettings = Object.fromEntries(Object.entries(channelSettings).filter(([_, v]) => v !== undefined && v !== null));
-        await channel.edit(cleanedSettings);
-        log.debug(`[${toolName}] Channel updated`, { id: channel.id });
-        return buildResponse({ updated: true, id: channel.id });
+        return buildResponse({ results });
       } else if (method === 'delete') {
-        if (!channelId) {
-          log.error(`[${toolName}] channelId required for delete.`);
-          throw new Error('channelId required for delete.');
+        if (!channelIds.length) {
+          log.error(`[${toolName}] channelId(s) required for delete.`);
+          throw new Error('channelId(s) required for delete.');
         }
-        const channel = discord.channels.cache.get(channelId);
-        if (!channel) {
-          log.error(`[${toolName}] Channel not found.`, { channelId });
-          throw new Error('Channel not found.');
+        const results = [];
+        for (const cid of channelIds) {
+          const channel = discord.channels.cache.get(cid);
+          if (!channel) {
+            results.push({ error: 'Channel not found', id: cid });
+            continue;
+          }
+          await channel.delete();
+          log.debug(`[${toolName}] Channel deleted`, { id: cid });
+          results.push({ deleted: true, id: cid });
         }
-        await channel.delete();
-        log.debug(`[${toolName}] Channel deleted`, { id: channelId });
-        return buildResponse({ deleted: true, id: channelId });
+        return buildResponse({ results });
       } else {
         log.error(`[${toolName}] Invalid method.`, { method });
         throw new Error('Invalid method.');
