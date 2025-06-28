@@ -50,7 +50,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     'Send, get, bulkDelete, react to, pin, or unpin messages in a channel.',
     {
       channelId: z.string(),
-      method: z.enum(['send', 'get', 'bulkDelete', 'react', 'pin', 'unpin']),
+      method: z.enum(['send', 'get', 'bulkDelete', 'react', 'pin', 'unpin', 'edit']),
       messageId: z.string().optional(),
       messageIds: z.array(z.string()).optional(),
       messageSettings: messageSettingsSchema.optional(),
@@ -91,6 +91,13 @@ export default async function ({ mcpServer, toolName, log, discord }) {
         if (!msg) throw new Error('Message not found.');
         await msg.unpin();
         return buildResponse({ unpinned: true, messageId });
+      } else if (method === 'edit') {
+        if (!messageId) throw new Error('messageId required for edit.');
+        if (!messageSettings) throw new Error('messageSettings required for edit.');
+        const msg = await channel.messages.fetch(messageId);
+        if (!msg) throw new Error('Message not found.');
+        const edited = await msg.edit(messageSettings);
+        return buildResponse({ edited: true, messageId, content: edited.content });
       } else {
         throw new Error('Invalid method.');
       }
