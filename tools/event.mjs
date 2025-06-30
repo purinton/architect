@@ -1,14 +1,14 @@
 import { z, buildResponse } from '@purinton/mcp-server';
 
 const eventSettingsSchema = z.object({
-  name: z.string().optional(),
+  name: z.string(),
   description: z.string().optional(),
-  scheduledStartTime: z.string().optional(), // ISO string
-  scheduledEndTime: z.string().optional(),
-  privacyLevel: z.number().optional(),
-  entityType: z.number().optional(),
-  channelId: z.string().optional(),
-  reason: z.string().optional(),
+  scheduledStartTime: z.string().describe('ISO string'),
+  scheduledEndTime: z.string().describe('ISO string'),
+  privacyLevel: z.number().describe('Privacy level for the event (0 = Guild Only, 1 = Public, 2 = Private)'),
+  entityType: z.number().describe('1 = Stage Instance (requires a stage channel), 2 = Voice (requires a voice channel), 3 = External (no channel required)'),
+  channelId: z.string().describe('Channel ID for the event (required for stage/voice events)'),
+  reason: z.string().describe('Reason for the event creation'),
 });
 
 export default async function ({ mcpServer, toolName, log, discord }) {
