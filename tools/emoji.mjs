@@ -1,4 +1,7 @@
 import { z, buildResponse } from '@purinton/mcp-server';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const emojiSettingsSchema = z.object({
   name: z.string().optional(),
@@ -8,44 +11,49 @@ const emojiSettingsSchema = z.object({
 });
 
 export default async function ({ mcpServer, toolName, log, discord }) {
+  // Dynamically load all method handlers from tools/emoji/*.mjs
+  const methods = {};
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const emojiDir = path.resolve(__dirname, 'emoji');
+  const files = await fs.readdir(emojiDir);
+  for (const file of files) {
+    if (file.endsWith('.mjs')) {
+      const method = file.replace(/\.mjs$/, '');
+      try {
+        const mod = await import(path.join(emojiDir, file));
+        if (typeof mod.default === 'function') {
+          methods[method] = mod.default;
+        }
+      } catch (err) {
+        if (log && typeof log.error === 'function') {
+          log.error(`[${toolName}] Failed to import handler ${file}: ${err.message}`);
+        }
+      }
+    }
+  }
+
   mcpServer.tool(
     toolName,
     'Create, delete, or get a guild emoji.',
     {
       guildId: z.string(),
-      method: z.enum(['create', 'delete', 'get']),
+      method: z.string(), // now any string, not enum
       emojiId: z.string().optional(),
       emojiSettings: emojiSettingsSchema.nullable().optional(),
     },
     async (_args, _extra) => {
       try {
         log.debug(`[${toolName}] Request`, { _args });
-        const { guildId, method, emojiId, emojiSettings } = _args;
-        const guild = discord.guilds.cache.get(guildId);
-        if (!guild) return buildResponse({ error: 'Guild not found.' });
-        if (method === 'create') {
-          if (!emojiSettings?.name || !emojiSettings?.image) return buildResponse({ error: 'name and image required for create.' });
-          const emoji = await guild.emojis.create({
-            name: emojiSettings.name,
-            image: emojiSettings.image,
-            roles: emojiSettings.roles,
-            reason: emojiSettings.reason,
-          });
-          return buildResponse({ created: true, id: emoji.id, name: emoji.name });
-        } else if (method === 'delete') {
-          if (!emojiId) return buildResponse({ error: 'emojiId required for delete.' });
-          const emoji = guild.emojis.cache.get(emojiId);
-          if (!emoji) return buildResponse({ error: 'Emoji not found.' });
-          await emoji.delete();
-          return buildResponse({ deleted: true, id: emojiId });
-        } else if (method === 'get') {
-          if (!emojiId) return buildResponse({ error: 'emojiId required for get.' });
-          const emoji = guild.emojis.cache.get(emojiId);
-          if (!emoji) return buildResponse({ error: 'Emoji not found.' });
-          return buildResponse({ id: emoji.id, name: emoji.name, url: emoji.url, roles: emoji.roles.cache.map(r => r.id) });
-        } else {
-          return buildResponse({ error: 'Invalid method.' });
+        const { method } = _args;
+        if (!method || typeof method !== 'string') {
+          return buildResponse({ error: 'method required.' });
         }
+        if (!methods[method]) {
+          return buildResponse({ error: `Unknown method: ${method}` });
+        }
+        // Pass all args, plus helpers, to the method
+        return await methods[method]({ ..._args, mcpServer, toolName, log, discord, buildResponse });
       } catch (err) {
         return buildResponse({ error: err?.message || String(err) });
       }
