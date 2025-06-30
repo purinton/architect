@@ -4,9 +4,16 @@ export default async function ({ channelId, log, discord, buildResponse, toolNam
   if (!channel || !channel.permissionOverwrites) return buildResponse({ error: 'Channel not found or does not support permissions.' });
   const perms = channel.permissionOverwrites.cache.map(po => {
     const guild = channel.guild;
-    const name = po.type === 'role'
-      ? guild.roles.cache.get(po.id)?.name ?? null
-      : guild.members.cache.get(po.id)?.user?.username ?? null;
+    let name = null;
+    if (po.type === 'role') {
+      if (po.id === guild.id) {
+        name = '@everyone';
+      } else {
+        name = guild.roles.cache.get(po.id)?.name || `Role ${po.id}`;
+      }
+    } else if (po.type === 'member') {
+      name = guild.members.cache.get(po.id)?.user?.username || `User ${po.id}`;
+    }
     const allow = po.allow?.toArray() || [];
     const deny = po.deny?.toArray() || [];
     return {

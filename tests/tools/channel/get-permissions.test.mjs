@@ -21,8 +21,8 @@ describe('channel tool - get-permissions', () => {
     expect(result).toHaveProperty('content');
     const perms = JSON.parse(result.content[0].text).permissionOverwrites;
     expect(perms).toEqual([
-      { id: 'role1', type: 'role', allow: ['123'], deny: ['0'], name: null, inherited: false },
-      { id: 'user1', type: 'member', allow: ['0'], deny: ['456'], name: null, inherited: false },
+      { id: 'role1', type: 'role', allow: ['123'], deny: ['0'], name: 'Role role1', inherited: false },
+      { id: 'user1', type: 'member', allow: ['0'], deny: ['456'], name: 'User user1', inherited: false },
     ]);
   });
 });
