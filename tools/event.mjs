@@ -6,8 +6,8 @@ import { fileURLToPath } from 'url';
 const eventSettingsSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
-  scheduledStartTime: z.string().describe('ISO string'),
-  scheduledEndTime: z.string().describe('ISO string'),
+  scheduledStartTime: z.string().describe('ISO string (Must be in the future)'),
+  scheduledEndTime: z.string().describe('ISO string (Must be after scheduledStartTime)'),
   entityType: z.number().describe('1 = Stage Instance (requires a stage channel), 2 = Voice (requires a voice channel), 3 = External (no channel required)'),
   channelId: z.string().describe('Channel ID for the event (required for stage/voice events)'),
   reason: z.string().describe('Reason for the event creation'),
