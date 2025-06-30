@@ -21,7 +21,8 @@ describe('event tool - create', () => {
   });
   it('successfully creates', async () => {
     const eventObj = { id: 'e', name: 'em' };
-    const guild = { scheduledEvents: { create: jest.fn(async () => eventObj) }, channels: { cache: new Map([['c', { type: 2 }]]) } };
+    const mockChannel = { type: 2, isVoiceBased: () => true };
+    const guild = { scheduledEvents: { create: jest.fn(async () => eventObj) }, channels: { cache: new Map([['c', mockChannel]]) } };
     const discord = { guilds: { cache: new Map([['g', guild]]) } };
     const handler = await setup(discord);
     const settings = { name: 'em', scheduledStartTime: '2025-01-01T00:00:00Z', scheduledEndTime: '2025-01-01T01:00:00Z', entityType: 2, channelId: 'c', reason: '' };
