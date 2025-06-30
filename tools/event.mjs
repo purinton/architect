@@ -28,6 +28,15 @@ export default async function ({ mcpServer, toolName, log, discord }) {
       if (!guild) throw new Error('Guild not found.');
       if (method === 'create') {
         if (!eventSettings?.name || !eventSettings?.scheduledStartTime || !eventSettings?.entityType) throw new Error('name, scheduledStartTime, and entityType required for create.');
+        // Voice/stage channel check
+        if (eventSettings?.channelId) {
+          const channel = guild.channels.cache.get(eventSettings.channelId);
+          if (!channel) throw new Error('Channel not found.');
+          // Discord voice: 2, stage: 13
+          if (![2, 13].includes(channel.type)) {
+            throw new Error('Event creation requires a voice or stage channel.');
+          }
+        }
         const event = await guild.scheduledEvents.create(eventSettings);
         return buildResponse({ created: true, id: event.id, name: event.name });
       } else if (method === 'update') {
