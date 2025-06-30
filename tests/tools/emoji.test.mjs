@@ -7,6 +7,11 @@ describe('emoji tool', () => {
     const discord = { guilds: { cache: new Map([['g', { emojis: { cache: new Map([['e', { id: 'e', name: 'em', url: 'url', roles: { cache: new Map() }, delete: jest.fn() }]]), create: jest.fn(() => ({ id: 'e', name: 'em' })) } }]]) } };
     await emojiTool({ mcpServer, toolName: 'emoji', log, discord });
     const handler = mcpServer.tool.mock.calls[0][3];
-    await expect(handler({ guildId: 'g', method: 'invalid' }, {})).rejects.toThrow('Invalid method.');
+    const result = await handler({ guildId: 'g', method: 'invalid' }, {});
+    expect(result).toHaveProperty('content');
+    expect(Array.isArray(result.content)).toBe(true);
+    expect(result.content[0]).toHaveProperty('text');
+    const errorObj = JSON.parse(result.content[0].text);
+    expect(errorObj).toMatchObject({ error: 'Invalid method.' });
   });
 });

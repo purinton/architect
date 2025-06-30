@@ -7,6 +7,11 @@ describe('channel tool', () => {
     const discord = { guilds: { cache: new Map([['g', { channels: { cache: new Map([['c', { id: 'c', name: 'chan', type: 0, edit: jest.fn(), delete: jest.fn() }]]) } }]]) } };
     await channelTool({ mcpServer, toolName: 'channel', log, discord });
     const handler = mcpServer.tool.mock.calls[0][3];
-    await expect(handler({ method: 'invalid' }, {})).rejects.toThrow('Invalid method.');
+    const result = await handler({ method: 'invalid' }, {});
+    expect(result).toHaveProperty('content');
+    expect(Array.isArray(result.content)).toBe(true);
+    expect(result.content[0]).toHaveProperty('text');
+    const errorObj = JSON.parse(result.content[0].text);
+    expect(errorObj).toMatchObject({ error: 'Invalid method.' });
   });
 });

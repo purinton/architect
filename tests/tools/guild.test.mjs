@@ -7,6 +7,11 @@ describe('guild tool', () => {
     const discord = { guilds: { cache: new Map([['g', { id: 'g', name: 'guild', edit: jest.fn(), fetchAuditLogs: jest.fn(() => ({ entries: { size: 0, map: () => [] } })) }]]) } };
     await guildTool({ mcpServer, toolName: 'guild', log, discord });
     const handler = mcpServer.tool.mock.calls[0][3];
-    await expect(handler({ guildId: 'g', method: 'invalid' }, {})).rejects.toThrow('Invalid method.');
+    const result = await handler({ guildId: 'g', method: 'invalid' }, {});
+    expect(result).toHaveProperty('content');
+    expect(Array.isArray(result.content)).toBe(true);
+    expect(result.content[0]).toHaveProperty('text');
+    const errorObj = JSON.parse(result.content[0].text);
+    expect(errorObj).toMatchObject({ error: 'Invalid method.' });
   });
 });
