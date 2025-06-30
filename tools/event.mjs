@@ -5,7 +5,6 @@ const eventSettingsSchema = z.object({
   description: z.string().optional(),
   scheduledStartTime: z.string().describe('ISO string'),
   scheduledEndTime: z.string().describe('ISO string'),
-  privacyLevel: z.number().describe('Privacy level for the event (0 = Guild Only, 1 = Public, 2 = Private)'),
   entityType: z.number().describe('1 = Stage Instance (requires a stage channel), 2 = Voice (requires a voice channel), 3 = External (no channel required)'),
   channelId: z.string().describe('Channel ID for the event (required for stage/voice events)'),
   reason: z.string().describe('Reason for the event creation'),
@@ -37,7 +36,9 @@ export default async function ({ mcpServer, toolName, log, discord }) {
             throw new Error('Event creation requires a voice or stage channel.');
           }
         }
-        const event = await guild.scheduledEvents.create(eventSettings);
+        // Hard code privacyLevel to 2 (GUILD_ONLY)
+        const eventPayload = { ...eventSettings, privacyLevel: 2 };
+        const event = await guild.scheduledEvents.create(eventPayload);
         return buildResponse({ created: true, id: event.id, name: event.name });
       } else if (method === 'update') {
         if (!eventId || !eventSettings) throw new Error('eventId and eventSettings required for update.');
