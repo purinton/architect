@@ -8,6 +8,7 @@ const eventSettingsSchema = z.object({
   entityType: z.number().describe('1 = Stage Instance (requires a stage channel), 2 = Voice (requires a voice channel), 3 = External (no channel required)'),
   channelId: z.string().describe('Channel ID for the event (required for stage/voice events)'),
   reason: z.string().describe('Reason for the event creation'),
+  location: z.string().optional().describe('Location for external events (entityType 3). Defaults to "Not Specified"'),
 });
 
 export default async function ({ mcpServer, toolName, log, discord }) {
@@ -37,7 +38,15 @@ export default async function ({ mcpServer, toolName, log, discord }) {
           }
         }
         // Hard code privacyLevel to 2 (GUILD_ONLY)
-        const eventPayload = { ...eventSettings, privacyLevel: 2 };
+        let eventPayload = { ...eventSettings, privacyLevel: 2 };
+        // For external events, add entityMetadata.location
+        if (eventSettings.entityType === 3) {
+          const location = eventSettings.location || 'Not Specified';
+          eventPayload = {
+            ...eventPayload,
+            entityMetadata: { location },
+          };
+        }
         const event = await guild.scheduledEvents.create(eventPayload);
         return buildResponse({ created: true, id: event.id, name: event.name });
       } else if (method === 'update') {
