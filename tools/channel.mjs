@@ -19,6 +19,17 @@ const webhookSettingsSchema = z.object({
   reason: z.string().optional(),
 });
 
+const permissionOverwriteSchema = z.object({
+  id: z.string().describe("Role or user ID to apply the permission overwrite."),
+  type: z.enum(['role', 'member']).describe("Type of overwrite: 'role' for role ID, 'member' for user ID"),
+  allow: z.union([z.string(), z.number()]).optional().describe(
+    "Permissions to allow, specified as a bitfield. Provide as integer or string (e.g. 1024 for VIEW_CHANNEL). Combine flags using bitwise OR."
+  ),
+  deny: z.union([z.string(), z.number()]).optional().describe(
+    "Permissions to deny, specified as a bitfield. Provide as integer or string (e.g. 2048 for SEND_MESSAGES). Combine flags using bitwise OR."
+  ),
+});
+
 const VOICE_TYPES = [2, 13]; // 2: GUILD_VOICE, 13: GUILD_STAGE_VOICE
 const VOICE_ONLY_SETTINGS = ['bitrate', 'userLimit'];
 const NON_VOICE_ONLY_SETTINGS = ['topic', 'nsfw', 'rateLimitPerUser'];
@@ -36,22 +47,24 @@ function cleanSettingsForType(settings, type) {
 export default async function ({ mcpServer, toolName, log, discord }) {
   mcpServer.tool(
     toolName,
-    'Create, list, get, update, delete channels, or manage webhooks for a channel.',
+    'Create, list, get, update, delete channels, manage webhooks, and manage channel permissions.',
     {
       guildId: z.string().optional(),
       channelId: z.union([z.string(), z.array(z.string())]).optional(),
       method: z.enum([
         'create', 'list', 'get', 'update', 'delete',
-        'webhook-create', 'webhook-delete', 'webhook-list'
+        'webhook-create', 'webhook-delete', 'webhook-list',
+        'get-permissions', 'set-permissions', 'sync-permissions'
       ]),
       channelSettings: z.union([channelSettingsSchema, z.array(channelSettingsSchema)]).nullable().optional(),
       webhookId: z.string().optional(),
       webhookSettings: webhookSettingsSchema.nullable().optional(),
+      permissionOverwrites: z.array(permissionOverwriteSchema).optional(),
     },
     async (_args, _extra) => {
       try {
         log.debug(`[${toolName}] Request`, { _args });
-        const { guildId, channelId, method, channelSettings, webhookId, webhookSettings } = _args;
+        const { guildId, channelId, method, channelSettings, webhookId, webhookSettings, permissionOverwrites } = _args;
         const channelIds = method === 'create' ? [] : Array.isArray(channelId) ? channelId.filter(Boolean) : channelId ? [channelId].filter(Boolean) : [];
         let settingsArr = Array.isArray(channelSettings) ? channelSettings : channelSettings ? [channelSettings] : [];
         // Webhook methods
@@ -171,6 +184,37 @@ export default async function ({ mcpServer, toolName, log, discord }) {
             results.push({ deleted: true, id: cid });
           }
           return buildResponse({ results });
+        } else if (method === 'get-permissions') {
+          if (!channelId) return buildResponse({ error: 'channelId required for get-permissions.' });
+          const channel = discord.channels.cache.get(Array.isArray(channelId) ? channelId[0] : channelId);
+          if (!channel || !channel.permissionOverwrites) return buildResponse({ error: 'Channel not found or does not support permissions.' });
+          const perms = channel.permissionOverwrites.cache.map(po => ({
+            id: po.id,
+            type: po.type,
+            allow: po.allow?.bitfield?.toString() ?? po.allow?.toString(),
+            deny: po.deny?.bitfield?.toString() ?? po.deny?.toString(),
+          }));
+          return buildResponse({ permissionOverwrites: perms });
+        } else if (method === 'set-permissions') {
+          if (!channelId) return buildResponse({ error: 'channelId required for set-permissions.' });
+          if (!permissionOverwrites || !Array.isArray(permissionOverwrites)) return buildResponse({ error: 'permissionOverwrites array required for set-permissions.' });
+          const channel = discord.channels.cache.get(Array.isArray(channelId) ? channelId[0] : channelId);
+          if (!channel || !channel.permissionOverwrites) return buildResponse({ error: 'Channel not found or does not support permissions.' });
+          // Set each overwrite
+          for (const po of permissionOverwrites) {
+            await channel.permissionOverwrites.edit(po.id, {
+              allow: po.allow,
+              deny: po.deny,
+              type: po.type,
+            });
+          }
+          return buildResponse({ updated: true, count: permissionOverwrites.length });
+        } else if (method === 'sync-permissions') {
+          if (!channelId) return buildResponse({ error: 'channelId required for sync-permissions.' });
+          const channel = discord.channels.cache.get(Array.isArray(channelId) ? channelId[0] : channelId);
+          if (!channel || !channel.parent) return buildResponse({ error: 'Channel not found or has no parent to sync with.' });
+          await channel.lockPermissions();
+          return buildResponse({ synced: true, channelId: channel.id, parentId: channel.parentId });
         } else {
           log.error(`[${toolName}] Invalid method.`, { method });
           return buildResponse({ error: 'Invalid method.' });
