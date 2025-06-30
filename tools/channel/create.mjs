@@ -13,7 +13,9 @@ export default async function ({ guildId, channelSettings, log, discord, buildRe
   }
   const results = [];
   for (const settings of settingsArr) {
-    const cleaned = cleanSettingsForType(settings, settings.type);
+    // Remove permissionOverwrites if present
+    const { permissionOverwrites, ...settingsWithoutPerms } = settings;
+    const cleaned = cleanSettingsForType(settingsWithoutPerms, settings.type);
     const created = await guild.channels.create({ ...cleaned });
     log.debug(`[${toolName}] Channel created`, { id: created.id });
     results.push({ created: true, id: created.id, name: created.name });

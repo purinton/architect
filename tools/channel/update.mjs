@@ -14,7 +14,9 @@ export default async function ({ channelId, channelSettings, log, discord, build
       results.push({ error: 'Channel not found', id: cid });
       continue;
     }
-    const cleanedSettings = cleanSettingsForType(settings, channel.type);
+    // Remove permissionOverwrites if present
+    const { permissionOverwrites, ...settingsWithoutPerms } = settings;
+    const cleanedSettings = cleanSettingsForType(settingsWithoutPerms, channel.type);
     await channel.edit(cleanedSettings);
     log.debug(`[${toolName}] Channel updated`, { id: channel.id });
     results.push({ updated: true, id: channel.id });

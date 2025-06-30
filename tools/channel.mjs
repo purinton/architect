@@ -13,7 +13,7 @@ const channelSettingsSchema = z.object({
   parent: z.string().optional(),
   position: z.number().optional(),
   rateLimitPerUser: z.number().optional(),
-  permissionOverwrites: z.any().optional(),
+  // permissionOverwrites removed from schema
 });
 
 const webhookSettingsSchema = z.object({
