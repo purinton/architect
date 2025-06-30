@@ -5,7 +5,9 @@ const roleSettingsSchema = z.object({
   color: z.union([z.string(), z.number()]).optional(),
   hoist: z.boolean().optional(),
   position: z.number().optional(),
-  permissions: z.any().optional(),
+  permissions: z.union([z.string(), z.number()]).optional().describe(
+    "Permissions to set, specified as a bitfield. Provide as integer or string (e.g. 8 for ADMINISTRATOR). Combine flags using bitwise OR."
+  ),
   mentionable: z.boolean().optional(),
 });
 
@@ -75,10 +77,10 @@ export default async function ({ mcpServer, toolName, log, discord }) {
             return {
               id: role.id,
               name: role.name,
+              permissions: role.permissions?.bitfield?.toString?.() ?? role.permissions?.toString(),
               color: role.color,
               hoist: role.hoist,
               position: role.position,
-              permissions: role.permissions,
               mentionable: role.mentionable,
             };
           });
@@ -97,7 +99,12 @@ export default async function ({ mcpServer, toolName, log, discord }) {
               results.push({ error: 'Role not found', id: rid });
               continue;
             }
-            const cleanedSettings = Object.fromEntries(Object.entries(settings).filter(([_, v]) => v !== undefined && v !== null));
+            // include permissions if provided (bitfield string or number)
+            const cleanedSettings = Object.fromEntries(
+              Object.entries(settings)
+                .filter(([_, v]) => v !== undefined && v !== null)
+                .map(([k, v]) => [k, k === 'permissions' ? v : v])
+            );
             await role.edit(cleanedSettings);
             log.debug(`[${toolName}] Role updated`, { id: role.id });
             results.push({ updated: true, id: role.id });
