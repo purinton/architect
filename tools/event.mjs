@@ -1,4 +1,7 @@
 import { z, buildResponse } from '@purinton/mcp-server';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const eventSettingsSchema = z.object({
   name: z.string(),
@@ -12,62 +15,43 @@ const eventSettingsSchema = z.object({
 });
 
 export default async function ({ mcpServer, toolName, log, discord }) {
+  // Dynamically load all method handlers from tools/event/*.mjs
+  const methods = {};
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const eventDir = path.resolve(__dirname, 'event');
+  const files = await fs.readdir(eventDir);
+  for (const file of files) {
+    if (file.endsWith('.mjs')) {
+      const method = file.replace(/\.mjs$/, '');
+      const mod = await import(path.join(eventDir, file));
+      if (typeof mod.default === 'function') {
+        methods[method] = mod.default;
+      }
+    }
+  }
+
   mcpServer.tool(
     toolName,
     'Create, update, delete, or list guild events.',
     {
       guildId: z.string(),
-      method: z.enum(['create', 'update', 'delete', 'list']),
+      method: z.string(), // now any string, not enum
       eventId: z.string().optional(),
       eventSettings: eventSettingsSchema.nullable().optional(),
     },
     async (_args, _extra) => {
       try {
         log.debug(`[${toolName}] Request`, { _args });
-        const { guildId, method, eventId, eventSettings } = _args;
-        const guild = discord.guilds.cache.get(guildId);
-        if (!guild) return buildResponse({ error: 'Guild not found.' });
-        if (method === 'create') {
-          if (!eventSettings?.name || !eventSettings?.scheduledStartTime || !eventSettings?.entityType) return buildResponse({ error: 'name, scheduledStartTime, and entityType required for create.' });
-          // Voice/stage channel check
-          if (eventSettings?.channelId) {
-            const channel = guild.channels.cache.get(eventSettings.channelId);
-            if (!channel) return buildResponse({ error: 'Channel not found.' });
-            // Discord voice: 2, stage: 13
-            if (![2, 13].includes(channel.type)) {
-              return buildResponse({ error: 'Event creation requires a voice or stage channel.' });
-            }
-          }
-          // Hard code privacyLevel to 2 (GUILD_ONLY)
-          let eventPayload = { ...eventSettings, privacyLevel: 2 };
-          // For external events, add entityMetadata.location
-          if (eventSettings.entityType === 3) {
-            const location = eventSettings.location || 'Not Specified';
-            eventPayload = {
-              ...eventPayload,
-              entityMetadata: { location },
-            };
-          }
-          const event = await guild.scheduledEvents.create(eventPayload);
-          return buildResponse({ created: true, id: event.id, name: event.name });
-        } else if (method === 'update') {
-          if (!eventId || !eventSettings) return buildResponse({ error: 'eventId and eventSettings required for update.' });
-          const event = guild.scheduledEvents.cache.get(eventId);
-          if (!event) return buildResponse({ error: 'Event not found.' });
-          await event.edit(eventSettings);
-          return buildResponse({ updated: true, id: event.id });
-        } else if (method === 'delete') {
-          if (!eventId) return buildResponse({ error: 'eventId required for delete.' });
-          const event = guild.scheduledEvents.cache.get(eventId);
-          if (!event) return buildResponse({ error: 'Event not found.' });
-          await event.delete();
-          return buildResponse({ deleted: true, id: eventId });
-        } else if (method === 'list') {
-          const events = guild.scheduledEvents.cache.map(e => ({ id: e.id, name: e.name, scheduledStartTime: e.scheduledStartTime }));
-          return buildResponse({ events });
-        } else {
-          return buildResponse({ error: 'Invalid method.' });
+        const { method } = _args;
+        if (!method || typeof method !== 'string') {
+          return buildResponse({ error: 'method required.' });
         }
+        if (!methods[method]) {
+          return buildResponse({ error: `Unknown method: ${method}` });
+        }
+        // Pass all args, plus helpers, to the method
+        return await methods[method]({ ..._args, mcpServer, toolName, log, discord, buildResponse });
       } catch (err) {
         return buildResponse({ error: err?.message || String(err) });
       }
