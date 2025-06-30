@@ -186,7 +186,7 @@ export async function getReply(log, db, openai, appId, guild, channel, messages)
 
     let response;
     try {
-        log.debug('OpenAI API Call', config);
+        //log.debug('OpenAI API Call', config);
         response = await openai.responses.create(config);
         log.debug('OpenAI API Response', response);
     } catch (error) {
