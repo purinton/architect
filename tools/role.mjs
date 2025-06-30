@@ -1,13 +1,16 @@
 import { z, buildResponse } from '@purinton/mcp-server';
+import { PermissionsBitField } from 'discord.js';
 
 const roleSettingsSchema = z.object({
   name: z.string().optional(),
   color: z.union([z.string(), z.number()]).optional(),
   hoist: z.boolean().optional(),
   position: z.number().optional(),
-  permissions: z.union([z.string(), z.number()]).optional().describe(
-    "Permissions to set, specified as a bitfield. Provide as integer or string (e.g. 8 for ADMINISTRATOR). Combine flags using bitwise OR."
-  ),
+  permissions: z.array(z.string())
+    .optional()
+    .describe(
+      "Permissions to set, specified as an array of permission names (e.g. ['VIEW_CHANNEL','SEND_MESSAGES'])."
+    ),
   mentionable: z.boolean().optional(),
 });
 
@@ -47,7 +50,13 @@ export default async function ({ mcpServer, toolName, log, discord }) {
           }
           const results = [];
           for (const settings of settingsArr) {
-            const created = await guild.roles.create({ ...settings });
+            const opts = { ...settings };
+            if (Array.isArray(opts.permissions)) {
+              opts.permissions = PermissionsBitField.resolve(opts.permissions);
+            } else {
+              delete opts.permissions;
+            }
+            const created = await guild.roles.create(opts);
             log.debug(`[${toolName}] Role created`, { id: created.id });
             results.push({ created: true, id: created.id, name: created.name });
           }
@@ -77,7 +86,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
             return {
               id: role.id,
               name: role.name,
-              permissions: role.permissions?.bitfield?.toString?.() ?? role.permissions?.toString(),
+              permissions: role.permissions?.toArray ? role.permissions.toArray() : [],
               color: role.color,
               hoist: role.hoist,
               position: role.position,
@@ -99,13 +108,16 @@ export default async function ({ mcpServer, toolName, log, discord }) {
               results.push({ error: 'Role not found', id: rid });
               continue;
             }
-            // include permissions if provided (bitfield string or number)
-            const cleanedSettings = Object.fromEntries(
-              Object.entries(settings)
-                .filter(([_, v]) => v !== undefined && v !== null)
-                .map(([k, v]) => [k, k === 'permissions' ? v : v])
+            // convert permissions array of names to bitfield number
+            const opts = Object.fromEntries(
+              Object.entries(settings).filter(([_, v]) => v !== undefined && v !== null)
             );
-            await role.edit(cleanedSettings);
+            if (Array.isArray(opts.permissions)) {
+              opts.permissions = PermissionsBitField.resolve(opts.permissions);
+            } else {
+              delete opts.permissions;
+            }
+            await role.edit(opts);
             log.debug(`[${toolName}] Role updated`, { id: role.id });
             results.push({ updated: true, id: role.id });
           }
