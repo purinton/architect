@@ -9,7 +9,7 @@ const roleSettingsSchema = z.object({
   permissions: z.array(z.string())
     .optional()
     .describe(
-      "Permissions to set, specified as an array of permission names (e.g. ['VIEW_CHANNEL','SEND_MESSAGES'])."
+      "Permissions to set, specified as an array of permission names (e.g. ['ViewChannel','SendMessages'])."
     ),
   mentionable: z.boolean().optional(),
 });
@@ -52,7 +52,12 @@ export default async function ({ mcpServer, toolName, log, discord }) {
           for (const settings of settingsArr) {
             const opts = { ...settings };
             if (Array.isArray(opts.permissions)) {
-              opts.permissions = PermissionsBitField.resolve(opts.permissions);
+              // Map permission strings directly via PermissionsBitField.Flags and filter out invalid ones
+              const permsArr = opts.permissions
+                .map(p => (typeof p === 'string' && PermissionsBitField.Flags[p]) ? PermissionsBitField.Flags[p] : null)
+                .filter(Boolean);
+              opts.permissions = permsArr.length > 0 ? PermissionsBitField.resolve(permsArr) : undefined;
+              if (opts.permissions === undefined) delete opts.permissions;
             } else {
               delete opts.permissions;
             }
@@ -113,7 +118,11 @@ export default async function ({ mcpServer, toolName, log, discord }) {
               Object.entries(settings).filter(([_, v]) => v !== undefined && v !== null)
             );
             if (Array.isArray(opts.permissions)) {
-              opts.permissions = PermissionsBitField.resolve(opts.permissions);
+              const permsArr = opts.permissions
+                .map(p => (typeof p === 'string' && PermissionsBitField.Flags[p]) ? PermissionsBitField.Flags[p] : null)
+                .filter(Boolean);
+              opts.permissions = permsArr.length > 0 ? PermissionsBitField.resolve(permsArr) : undefined;
+              if (opts.permissions === undefined) delete opts.permissions;
             } else {
               delete opts.permissions;
             }
