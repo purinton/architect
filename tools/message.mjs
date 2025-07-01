@@ -1,4 +1,7 @@
 import { z, buildResponse } from '@purinton/mcp-server';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Discord embed schema: only fields you can actually set
 const embedSchema = z.object({
@@ -45,12 +48,28 @@ const messageSettingsSchema = z.object({
 });
 
 export default async function ({ mcpServer, toolName, log, discord }) {
+  // Dynamically load all method handlers from tools/message/*.mjs
+  const methods = {};
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const messageDir = path.resolve(__dirname, 'message');
+  const files = await fs.readdir(messageDir);
+  for (const file of files) {
+    if (file.endsWith('.mjs')) {
+      const method = file.replace(/\.mjs$/, '');
+      const mod = await import(path.join(messageDir, file));
+      if (typeof mod.default === 'function') {
+        methods[method] = mod.default;
+      }
+    }
+  }
+
   mcpServer.tool(
     toolName,
     'Send, get, bulkDelete, react to, pin, or unpin messages in a channel.',
     {
       channelId: z.string(),
-      method: z.enum(['send', 'get', 'bulkDelete', 'react', 'pin', 'unpin', 'edit']),
+      method: z.string(), // now any string, not enum
       messageId: z.string().optional(),
       messageIds: z.array(z.string()).optional(),
       messageSettings: messageSettingsSchema.optional(),
@@ -60,48 +79,15 @@ export default async function ({ mcpServer, toolName, log, discord }) {
     async (_args, _extra) => {
       try {
         log.debug(`[${toolName}] Request`, { _args });
-        const { channelId, method, messageId, messageIds, messageSettings, emoji, limit } = _args;
-        const channel = discord.channels.cache.get(channelId);
-        if (!channel || !channel.send) return buildResponse({ error: 'Channel not found or cannot send messages.' });
-        if (method === 'send') {
-          if (!messageSettings?.content && !messageSettings?.embeds && !messageSettings?.files) return buildResponse({ error: 'content, embeds, or files required for send.' });
-          const msg = await channel.send(messageSettings);
-          return buildResponse({ sent: true, id: msg.id });
-        } else if (method === 'get') {
-          const msgs = await channel.messages.fetch({ limit: Math.min(limit || 50, 100) });
-          return buildResponse({ messages: msgs.map(m => ({ id: m.id, content: m.content, author: m.author.id })) });
-        } else if (method === 'bulkDelete') {
-          if (!messageIds || !messageIds.length) return buildResponse({ error: 'messageIds required for bulkDelete.' });
-          const deleted = await channel.bulkDelete(messageIds);
-          return buildResponse({ deleted: true, count: deleted.size });
-        } else if (method === 'react') {
-          if (!messageId || !emoji) return buildResponse({ error: 'messageId and emoji required for react.' });
-          const msg = await channel.messages.fetch(messageId);
-          if (!msg) return buildResponse({ error: 'Message not found.' });
-          await msg.react(emoji);
-          return buildResponse({ reacted: true, messageId, emoji });
-        } else if (method === 'pin') {
-          if (!messageId) return buildResponse({ error: 'messageId required for pin.' });
-          const msg = await channel.messages.fetch(messageId);
-          if (!msg) return buildResponse({ error: 'Message not found.' });
-          await msg.pin();
-          return buildResponse({ pinned: true, messageId });
-        } else if (method === 'unpin') {
-          if (!messageId) return buildResponse({ error: 'messageId required for unpin.' });
-          const msg = await channel.messages.fetch(messageId);
-          if (!msg) return buildResponse({ error: 'Message not found.' });
-          await msg.unpin();
-          return buildResponse({ unpinned: true, messageId });
-        } else if (method === 'edit') {
-          if (!messageId) return buildResponse({ error: 'messageId required for edit.' });
-          if (!messageSettings) return buildResponse({ error: 'messageSettings required for edit.' });
-          const msg = await channel.messages.fetch(messageId);
-          if (!msg) return buildResponse({ error: 'Message not found.' });
-          const edited = await msg.edit(messageSettings);
-          return buildResponse({ edited: true, messageId, content: edited.content });
-        } else {
-          return buildResponse({ error: 'Invalid method.' });
+        const { method } = _args;
+        if (!method || typeof method !== 'string') {
+          return buildResponse({ error: 'method required.' });
         }
+        if (!methods[method]) {
+          return buildResponse({ error: `Unknown method: ${method}` });
+        }
+        // Pass all args, plus helpers, to the method
+        return await methods[method]({ ..._args, mcpServer, toolName, log, discord, buildResponse });
       } catch (err) {
         return buildResponse({ error: err?.message || String(err) });
       }
