@@ -12,8 +12,7 @@ const channelSettingsSchema = z.object({
   userLimit: z.number().optional(),
   parent: z.string().optional(),
   position: z.number().optional(),
-  rateLimitPerUser: z.number().optional(),
-  // permissionOverwrites removed from schema
+  rateLimitPerUser: z.number().optional()
 });
 
 const webhookSettingsSchema = z.object({
@@ -26,10 +25,10 @@ const permissionOverwriteSchema = z.object({
   id: z.string().describe("Role or user ID to apply the permission overwrite."),
   type: z.enum(['role', 'member']).describe("Type of overwrite: 'role' for role ID, 'member' for user ID"),
   allow: z.array(z.string()).optional().describe(
-    "Permissions to allow, specified as an array of permission names (e.g. ['VIEW_CHANNEL', 'SEND_MESSAGES'])."
+    "Permissions to allow, specified as an array of permission names (e.g. ['ViewChannel', 'SendMessages'])."
   ),
   deny: z.array(z.string()).optional().describe(
-    "Permissions to deny, specified as an array of permission names (e.g. ['KICK_MEMBERS'])."
+    "Permissions to deny, specified as an array of permission names (e.g. ['KickMembers'])."
   ),
 });
 
@@ -66,7 +65,7 @@ export default async function ({ mcpServer, toolName, log, discord }) {
 
   mcpServer.tool(
     toolName,
-    'Create, list, get, update, delete channels, manage webhooks, and manage channel permissions.',
+    'Create, list, get, update, delete channels, manage webhooks, and manage channel permissions.  Don\'t use update method for perms, instead use get/set-permissions to update perms.',
     {
       guildId: z.string().optional(),
       channelId: z.union([z.string(), z.array(z.string())]).optional(),

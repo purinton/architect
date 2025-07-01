@@ -26,7 +26,7 @@ export default async function ({ channelId, permissionOverwrites, log, discord, 
         results.push({ id: po.id, type: po.type, skipped: true, reason: 'Cannot set permissions for the bot itself.' });
         continue;
       }
-      // Map permission strings like 'VIEW_CHANNEL' to PermissionsBitField.Flags and filter out invalid ones
+      // Map permission strings directly via PermissionsBitField.Flags and filter out invalid ones
       const mapPerms = arr => (Array.isArray(arr) && arr.length > 0)
         ? arr.map(p => {
             if (typeof p === 'string' && PermissionsBitField.Flags[p]) return PermissionsBitField.Flags[p];
