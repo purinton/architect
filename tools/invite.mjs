@@ -1,4 +1,7 @@
 import { z, buildResponse } from '@purinton/mcp-server';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const inviteSettingsSchema = z.object({
   maxAge: z.number().optional(),
@@ -9,36 +12,43 @@ const inviteSettingsSchema = z.object({
 });
 
 export default async function ({ mcpServer, toolName, log, discord }) {
+  // Dynamically load all method handlers from tools/invite/*.mjs
+  const methods = {};
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const inviteDir = path.resolve(__dirname, 'invite');
+  const files = await fs.readdir(inviteDir);
+  for (const file of files) {
+    if (file.endsWith('.mjs')) {
+      const method = file.replace(/\.mjs$/, '');
+      const mod = await import(path.join(inviteDir, file));
+      if (typeof mod.default === 'function') {
+        methods[method] = mod.default;
+      }
+    }
+  }
+
   mcpServer.tool(
     toolName,
     'Create, delete, or list invites for a channel.',
     {
       channelId: z.string(),
-      method: z.enum(['create', 'delete', 'list']),
+      method: z.string(), // now any string, not enum
       inviteCode: z.string().optional(),
       inviteSettings: inviteSettingsSchema.nullable().optional(),
     },
     async (_args, _extra) => {
       try {
         log.debug(`[${toolName}] Request`, { _args });
-        const { channelId, method, inviteCode, inviteSettings } = _args;
-        const channel = discord.channels.cache.get(channelId);
-        if (!channel || !channel.createInvite) return buildResponse({ error: 'Channel not found or cannot create invites.' });
-        if (method === 'create') {
-          const invite = await channel.createInvite(inviteSettings || {});
-          return buildResponse({ created: true, code: invite.code, url: invite.url });
-        } else if (method === 'delete') {
-          if (!inviteCode) return buildResponse({ error: 'inviteCode required for delete.' });
-          const invite = await discord.fetchInvite(inviteCode);
-          if (!invite) return buildResponse({ error: 'Invite not found.' });
-          await invite.delete();
-          return buildResponse({ deleted: true, code: inviteCode });
-        } else if (method === 'list') {
-          const invites = await channel.fetchInvites();
-          return buildResponse({ invites: invites.map(i => ({ code: i.code, url: i.url, uses: i.uses })) });
-        } else {
-          return buildResponse({ error: 'Invalid method.' });
+        const { method } = _args;
+        if (!method || typeof method !== 'string') {
+          return buildResponse({ error: 'method required.' });
         }
+        if (!methods[method]) {
+          return buildResponse({ error: `Unknown method: ${method}` });
+        }
+        // Pass all args, plus helpers, to the method
+        return await methods[method]({ ..._args, mcpServer, toolName, log, discord, buildResponse });
       } catch (err) {
         return buildResponse({ error: err?.message || String(err) });
       }
