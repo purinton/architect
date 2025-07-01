@@ -1,4 +1,7 @@
 import { z, buildResponse } from '@purinton/mcp-server';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const voiceUserSettingsSchema = z.object({
   channelId: z.string().optional(), // for move
@@ -7,61 +10,43 @@ const voiceUserSettingsSchema = z.object({
 });
 
 export default async function ({ mcpServer, toolName, log, discord }) {
+  // Dynamically load all method handlers from tools/voiceuser/*.mjs
+  const methods = {};
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const voiceuserDir = path.resolve(__dirname, 'voiceuser');
+  const files = await fs.readdir(voiceuserDir);
+  for (const file of files) {
+    if (file.endsWith('.mjs')) {
+      const method = file.replace(/\.mjs$/, '');
+      const mod = await import(path.join(voiceuserDir, file));
+      if (typeof mod.default === 'function') {
+        methods[method] = mod.default;
+      }
+    }
+  }
+
   mcpServer.tool(
     toolName,
     'Voice user moderation: move, disconnect, serverMute, serverDeafen.',
     {
       guildId: z.string(),
       userId: z.string(),
-      method: z.enum(['move', 'disconnect', 'serverMute', 'serverDeafen']),
+      method: z.string(), // now any string, not enum
       voiceUserSettings: voiceUserSettingsSchema.nullable().optional(),
     },
     async (_args, _extra) => {
       try {
         log.debug(`[${toolName}] Request`, { _args });
-        const { guildId, userId, method, voiceUserSettings } = _args;
-        const guild = discord.guilds.cache.get(guildId);
-        if (!guild) {
-          log.error(`[${toolName}] Guild not found.`, { guildId });
-          return buildResponse({ error: 'Guild not found.' });
+        const { method } = _args;
+        if (!method || typeof method !== 'string') {
+          return buildResponse({ error: 'method required.' });
         }
-        const member = guild.members.cache.get(userId);
-        if (!member || !member.voice) {
-          log.error(`[${toolName}] Member not found or not in voice.`, { userId });
-          return buildResponse({ error: 'Member not found or not in voice.' });
+        if (!methods[method]) {
+          return buildResponse({ error: `Unknown method: ${method}` });
         }
-        if (method === 'move') {
-          if (!voiceUserSettings?.channelId) {
-            log.error(`[${toolName}] channelId required for move.`);
-            return buildResponse({ error: 'channelId required for move.' });
-          }
-          await member.voice.setChannel(voiceUserSettings.channelId);
-          log.debug(`[${toolName}] User moved`, { userId, channelId: voiceUserSettings.channelId });
-          return buildResponse({ moved: true, userId, channelId: voiceUserSettings.channelId });
-        } else if (method === 'disconnect') {
-          await member.voice.disconnect();
-          log.debug(`[${toolName}] User disconnected from voice`, { userId });
-          return buildResponse({ disconnected: true, userId });
-        } else if (method === 'serverMute') {
-          if (typeof voiceUserSettings?.mute !== 'boolean') {
-            log.error(`[${toolName}] mute (boolean) required for serverMute.`);
-            return buildResponse({ error: 'mute (boolean) required for serverMute.' });
-          }
-          await member.voice.setMute(voiceUserSettings.mute);
-          log.debug(`[${toolName}] User serverMute set`, { userId, mute: voiceUserSettings.mute });
-          return buildResponse({ serverMute: true, userId, mute: voiceUserSettings.mute });
-        } else if (method === 'serverDeafen') {
-          if (typeof voiceUserSettings?.deafen !== 'boolean') {
-            log.error(`[${toolName}] deafen (boolean) required for serverDeafen.`);
-            return buildResponse({ error: 'deafen (boolean) required for serverDeafen.' });
-          }
-          await member.voice.setDeaf(voiceUserSettings.deafen);
-          log.debug(`[${toolName}] User serverDeafen set`, { userId, deafen: voiceUserSettings.deafen });
-          return buildResponse({ serverDeafen: true, userId, deafen: voiceUserSettings.deafen });
-        } else {
-          log.error(`[${toolName}] Invalid method.`, { method });
-          return buildResponse({ error: 'Invalid method.' });
-        }
+        // Pass all args, plus helpers, to the method
+        return await methods[method]({ ..._args, mcpServer, toolName, log, discord, buildResponse });
       } catch (err) {
         return buildResponse({ error: err?.message || String(err) });
       }
