@@ -26,9 +26,14 @@ export default async function ({ channelId, permissionOverwrites, log, discord, 
         results.push({ id: po.id, type: po.type, skipped: true, reason: 'Cannot set permissions for the bot itself.' });
         continue;
       }
-      let allow = Array.isArray(po.allow) && po.allow.length > 0 ? PermissionsBitField.resolve(po.allow) : undefined;
+      // Map permission strings to bitfield constants if possible
+      let allow = Array.isArray(po.allow) && po.allow.length > 0
+        ? PermissionsBitField.resolve(po.allow.map(p => PermissionsBitField.Flags[p] ?? p))
+        : undefined;
       log.debug('[set-permissions] resolved allow', { allow });
-      let deny = Array.isArray(po.deny) && po.deny.length > 0 ? PermissionsBitField.resolve(po.deny) : undefined;
+      let deny = Array.isArray(po.deny) && po.deny.length > 0
+        ? PermissionsBitField.resolve(po.deny.map(p => PermissionsBitField.Flags[p] ?? p))
+        : undefined;
       log.debug('[set-permissions] resolved deny', { deny });
       // Ensure type is a string for Discord API
       let type = po.type;
