@@ -1,4 +1,8 @@
+
 import { z, buildResponse } from '@purinton/mcp-server';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const updateSettingsSchema = z.object({
   afkChannelId: z.string().nullable().optional(),
@@ -31,110 +35,43 @@ const auditSettingsSchema = z.object({
 });
 
 export default async function ({ mcpServer, toolName, log, discord }) {
+  // Dynamically load all method handlers from tools/guild/*.mjs
+  const methods = {};
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const guildDir = path.resolve(__dirname, 'guild');
+  const files = await fs.readdir(guildDir);
+  for (const file of files) {
+    if (file.endsWith('.mjs')) {
+      const method = file.replace(/\.mjs$/, '');
+      const mod = await import(path.join(guildDir, file));
+      if (typeof mod.default === 'function') {
+        methods[method] = mod.default;
+      }
+    }
+  }
+
   mcpServer.tool(
     toolName,
     'Get, update, or audit a guild by ID.',
     {
       guildId: z.string(),
-      method: z.enum(['get', 'update', 'audit']),
+      method: z.string(), // now any string, not enum
       updateSettings: updateSettingsSchema.nullable().optional(),
       auditSettings: auditSettingsSchema.nullable().optional(),
     },
     async (_args, _extra) => {
       try {
         log.debug(`[${toolName}] Request`, { _args });
-        const { guildId, method, updateSettings, auditSettings } = _args;
-        const guild = discord.guilds.cache.get(guildId);
-        if (!guild) {
-          log.error(`[${toolName}] Guild not found.`, { guildId });
-          return buildResponse({ error: 'Guild not found.' });
+        const { method } = _args;
+        if (!method || typeof method !== 'string') {
+          return buildResponse({ error: 'method required.' });
         }
-        if (method === 'get') {
-          log.debug(`[${toolName}] Getting guild settings`, { guildId });
-          // Return current settings
-          const settings = {
-            id: guild.id,
-            name: guild.name,
-            description: guild.description,
-            icon: guild.iconURL?.({ dynamic: true, size: 1024 }),
-            banner: guild.bannerURL?.({ dynamic: true, size: 1024 }),
-            afkChannelId: guild.afkChannelId,
-            afkTimeout: guild.afkTimeout,
-            defaultMessageNotifications: guild.defaultMessageNotifications,
-            explicitContentFilter: guild.explicitContentFilter,
-            mfaLevel: guild.mfaLevel,
-            nsfwLevel: guild.nsfwLevel,
-            preferredLocale: guild.preferredLocale,
-            premiumProgressBarEnabled: guild.premiumProgressBarEnabled,
-            publicUpdatesChannelId: guild.publicUpdatesChannelId,
-            rulesChannelId: guild.rulesChannelId,
-            safetyAlertsChannelId: guild.safetyAlertsChannelId,
-            splash: guild.splashURL?.({ dynamic: true, size: 1024 }),
-            systemChannelFlags: guild.systemChannelFlags?.toArray?.() || undefined,
-            systemChannelId: guild.systemChannelId,
-            verificationLevel: guild.verificationLevel,
-          };
-          const cleanSettings = Object.fromEntries(Object.entries(settings).filter(([_, v]) => v !== undefined && v !== null));
-          log.debug(`[${toolName}] Returning guild settings`, { cleanSettings });
-          return buildResponse(cleanSettings);
-        } else if (method === 'update') {
-          log.debug(`[${toolName}] Updating guild settings`, { guildId, updateSettings });
-          if (!updateSettings) {
-            log.error(`[${toolName}] updateSettings required for update method.`, { guildId });
-            return buildResponse({ error: 'updateSettings required for update method.' });
-          }
-          // Clean updateSettings: remove null or undefined values
-          const cleanedUpdateSettings = Object.fromEntries(
-            Object.entries(updateSettings).filter(([_, v]) => v !== undefined && v !== null)
-          );
-          log.debug(`[${toolName}] Cleaned update settings`, { cleanedUpdateSettings });
-          await guild.edit(cleanedUpdateSettings);
-          log.debug(`[${toolName}] Guild updated`, { guildId, cleanedUpdateSettings });
-          // Return only serializable settings after update
-          const settings = {
-            id: guild.id,
-            name: guild.name,
-            description: guild.description,
-            icon: guild.iconURL?.({ dynamic: true, size: 1024 }),
-            banner: guild.bannerURL?.({ dynamic: true, size: 1024 }),
-            afkChannelId: guild.afkChannelId,
-            afkTimeout: guild.afkTimeout,
-            defaultMessageNotifications: guild.defaultMessageNotifications,
-            explicitContentFilter: guild.explicitContentFilter,
-            mfaLevel: guild.mfaLevel,
-            nsfwLevel: guild.nsfwLevel,
-            preferredLocale: guild.preferredLocale,
-            premiumProgressBarEnabled: guild.premiumProgressBarEnabled,
-            publicUpdatesChannelId: guild.publicUpdatesChannelId,
-            rulesChannelId: guild.rulesChannelId,
-            safetyAlertsChannelId: guild.safetyAlertsChannelId,
-            splash: guild.splashURL?.({ dynamic: true, size: 1024 }),
-            systemChannelFlags: guild.systemChannelFlags?.toArray?.() || undefined,
-            systemChannelId: guild.systemChannelId,
-            verificationLevel: guild.verificationLevel,
-          };
-          const cleanSettings = Object.fromEntries(Object.entries(settings).filter(([_, v]) => v !== undefined && v !== null));
-          log.debug(`[${toolName}] Returning updated guild settings`, { cleanSettings });
-          return buildResponse({ updated: true, settings: cleanSettings });
-        } else if (method === 'audit') {
-          log.debug(`[${toolName}] Fetching audit logs`, { guildId, auditSettings });
-          // Clean auditSettings: remove empty string, null, or undefined values
-          const options = Object.fromEntries(
-            Object.entries(auditSettings || {}).filter(
-              ([_, value]) =>
-                value !== undefined &&
-                value !== null &&
-                !(typeof value === 'string' && value.trim() === '')
-            )
-          );
-          log.debug(`[${toolName}] Cleaned audit log options`, { options });
-          const logs = await guild.fetchAuditLogs(options);
-          log.debug(`[${toolName}] Audit logs fetched`, { count: logs.entries.size });
-          return buildResponse({ entries: logs.entries.map(e => e.toJSON()) });
-        } else {
-          log.error(`[${toolName}] Invalid method.`, { method });
-          return buildResponse({ error: 'Invalid method.' });
+        if (!methods[method]) {
+          return buildResponse({ error: `Unknown method: ${method}` });
         }
+        // Pass all args, plus helpers, to the method
+        return await methods[method]({ ..._args, mcpServer, toolName, log, discord, buildResponse });
       } catch (err) {
         return buildResponse({ error: err?.message || String(err) });
       }
