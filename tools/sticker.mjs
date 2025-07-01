@@ -1,4 +1,7 @@
 import { z, buildResponse } from '@purinton/mcp-server';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const stickerSettingsSchema = z.object({
   name: z.string().optional(),
@@ -9,49 +12,43 @@ const stickerSettingsSchema = z.object({
 });
 
 export default async function ({ mcpServer, toolName, log, discord }) {
+  // Dynamically load all method handlers from tools/sticker/*.mjs
+  const methods = {};
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const stickerDir = path.resolve(__dirname, 'sticker');
+  const files = await fs.readdir(stickerDir);
+  for (const file of files) {
+    if (file.endsWith('.mjs')) {
+      const method = file.replace(/\.mjs$/, '');
+      const mod = await import(path.join(stickerDir, file));
+      if (typeof mod.default === 'function') {
+        methods[method] = mod.default;
+      }
+    }
+  }
+
   mcpServer.tool(
     toolName,
     'Create, update, delete, or list guild stickers.',
     {
       guildId: z.string(),
-      method: z.enum(['create', 'update', 'delete', 'list']),
+      method: z.string(), // now any string, not enum
       stickerId: z.string().optional(),
       stickerSettings: stickerSettingsSchema.nullable().optional(),
     },
     async (_args, _extra) => {
       try {
         log.debug(`[${toolName}] Request`, { _args });
-        const { guildId, method, stickerId, stickerSettings } = _args;
-        const guild = discord.guilds.cache.get(guildId);
-        if (!guild) return buildResponse({ error: 'Guild not found.' });
-        if (method === 'create') {
-          if (!stickerSettings?.name || !stickerSettings?.file || !stickerSettings?.tags) return buildResponse({ error: 'name, file, and tags required for create.' });
-          const sticker = await guild.stickers.create({
-            name: stickerSettings.name,
-            description: stickerSettings.description,
-            tags: stickerSettings.tags,
-            file: stickerSettings.file,
-            reason: stickerSettings.reason,
-          });
-          return buildResponse({ created: true, id: sticker.id, name: sticker.name });
-        } else if (method === 'update') {
-          if (!stickerId || !stickerSettings) return buildResponse({ error: 'stickerId and stickerSettings required for update.' });
-          const sticker = guild.stickers.cache.get(stickerId);
-          if (!sticker) return buildResponse({ error: 'Sticker not found.' });
-          await sticker.edit(stickerSettings);
-          return buildResponse({ updated: true, id: sticker.id });
-        } else if (method === 'delete') {
-          if (!stickerId) return buildResponse({ error: 'stickerId required for delete.' });
-          const sticker = guild.stickers.cache.get(stickerId);
-          if (!sticker) return buildResponse({ error: 'Sticker not found.' });
-          await sticker.delete();
-          return buildResponse({ deleted: true, id: stickerId });
-        } else if (method === 'list') {
-          const stickers = guild.stickers.cache.map(s => ({ id: s.id, name: s.name, tags: s.tags }));
-          return buildResponse({ stickers });
-        } else {
-          return buildResponse({ error: 'Invalid method.' });
+        const { method } = _args;
+        if (!method || typeof method !== 'string') {
+          return buildResponse({ error: 'method required.' });
         }
+        if (!methods[method]) {
+          return buildResponse({ error: `Unknown method: ${method}` });
+        }
+        // Pass all args, plus helpers, to the method
+        return await methods[method]({ ..._args, mcpServer, toolName, log, discord, buildResponse });
       } catch (err) {
         return buildResponse({ error: err?.message || String(err) });
       }
