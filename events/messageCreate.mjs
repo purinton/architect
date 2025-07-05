@@ -39,6 +39,7 @@ export default async function ({ client, log, msg, db, openai }, message) {
     log.debug('messageCreate', { id: message.id, message: JSON.stringify(message) });
     if (message.author.id === message.client.user.id) return;
     if (!message.guild) message.reply('Direct messages are not supported. Please use a channel in a server.');
+    if (message.mentions.everyone) return;
     const locale = message.guild?.preferredLocale || 'en-US';
     const isMentioned = message.mentions.has(message.client.user);
     const isReplyToBot = message.reference?.message?.author?.id === message.client.user.id;
