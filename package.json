@@ -1,7 +1,7 @@
 {
     "name": "@purinton/architect",
     "type": "module",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "description": "AI-powered Discord server automation and administration. Integrates Model Context Protocol (MCP) and OpenAI for natural language server management, built on the purinton/discord foundation.",
     "main": "architect.mjs",
     "scripts": {
@@ -32,7 +32,7 @@
     },
     "homepage": "https://github.com/purinton/architect#readme",
     "devDependencies": {
-        "jest": "^30.0.2"
+        "jest": "^30.0.4"
     },
     "jest": {
         "testEnvironment": "node",
@@ -43,11 +43,11 @@
         ]
     },
     "dependencies": {
-        "@purinton/common": "^1.0.16",
-        "@purinton/discord": "^1.0.11",
-        "@purinton/mcp-server": "^1.0.20",
-        "@purinton/mysql": "^1.0.9",
-        "@purinton/openai": "^1.0.1",
-        "dotenv": "^16.5.0"
+        "@purinton/common": "^1.0.17",
+        "@purinton/discord": "^1.0.14",
+        "@purinton/mcp-server": "^1.0.22",
+        "@purinton/mysql": "^1.0.10",
+        "@purinton/openai": "^1.0.2",
+        "dotenv": "^17.2.0"
     }
 }
